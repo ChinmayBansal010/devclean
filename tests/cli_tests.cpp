@@ -11,6 +11,19 @@
 #include <string>
 #include <vector>
 
+namespace {
+
+void setEnvVar(const char* name, const std::string& value)
+{
+#ifdef _WIN32
+    _putenv_s(name, value.c_str());
+#else
+    setenv(name, value.c_str(), 1);
+#endif
+}
+
+} // namespace
+
 int main()
 {
     char* argv[] = {
@@ -75,7 +88,7 @@ int main()
         output << R"({"disabled": ["cargo"], "ignored": ["npm"], "default_sort": "size", "schemaVersion": 1})";
         output.close();
 
-        setenv("HOME", home, 1);
+        setEnvVar("HOME", home);
         const AppConfig migrated = ConfigLoader::load();
         assert(std::find(migrated.disabledCaches.begin(), migrated.disabledCaches.end(), "cargo") != migrated.disabledCaches.end());
         assert(std::find(migrated.ignoredCaches.begin(), migrated.ignoredCaches.end(), "npm") != migrated.ignoredCaches.end());
@@ -85,7 +98,7 @@ int main()
 
     const std::filesystem::path tempRoot = std::filesystem::temp_directory_path() / "devclean-cli-tests";
     std::filesystem::create_directories(tempRoot / ".config" / "devclean" / "plugins");
-    setenv("HOME", tempRoot.string().c_str(), 1);
+    setEnvVar("HOME", tempRoot.string());
 
     AppConfig customConfig;
     CacheDefinition customCache;

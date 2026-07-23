@@ -13,7 +13,15 @@ include_directories(include)
 
 enable_testing()
 
-find_package(nlohmann_json CONFIG REQUIRED)
+include(FetchContent)
+
+find_package(nlohmann_json CONFIG QUIET)
+if(NOT nlohmann_json_FOUND)
+    FetchContent_Declare(nlohmann_json
+        URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
+    )
+    FetchContent_MakeAvailable(nlohmann_json)
+endif()
 
 add_library(devclean_core
     src/core/Application.cpp
@@ -76,7 +84,15 @@ set(CPACK_DEBIAN_PACKAGE_MAINTAINER "devclean@example.com")
 set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
 set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
 set(CPACK_RPM_PACKAGE_LICENSE "MIT")
-set(CPACK_GENERATOR "TGZ;DEB;RPM;ZIP")
+
+if(WIN32)
+    set(CPACK_GENERATOR "ZIP")
+elseif(APPLE)
+    set(CPACK_GENERATOR "TGZ;ZIP")
+else()
+    set(CPACK_GENERATOR "TGZ;DEB;RPM;ZIP")
+endif()
+
 include(CPack)
 
 if(ENABLE_SANITIZERS)

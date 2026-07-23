@@ -33,12 +33,21 @@ jobs:
             build/*.tar.gz
             build/*.zip
           if-no-files-found: warn
+
+  release:
+    needs: build
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: devclean-packages
+          path: release-artifacts
       - name: Create GitHub release
-        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            build/*.deb
-            build/*.rpm
-            build/*.tar.gz
-            build/*.zip
+            release-artifacts/*.deb
+            release-artifacts/*.rpm
+            release-artifacts/*.tar.gz
+            release-artifacts/*.zip

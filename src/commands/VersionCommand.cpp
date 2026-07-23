@@ -4,6 +4,6 @@
 
 int VersionCommand::execute(const ParsedArgs&)
 {
-    std::cout << "devclean v0.1.0\n";
+    std::cout << "devclean v" << DEVCLEAN_VERSION << '\n';
     return 0;
 }

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(devclean VERSION 0.1.0 LANGUAGES CXX)
+project(devclean VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -42,6 +42,7 @@ add_library(devclean_core
     src/utils/TerminalUtils.cpp
 )
 
+target_compile_definitions(devclean_core PRIVATE DEVCLEAN_VERSION="${PROJECT_VERSION}")
 target_link_libraries(devclean_core PRIVATE nlohmann_json::nlohmann_json)
 
 add_executable(devclean

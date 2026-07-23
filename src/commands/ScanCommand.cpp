@@ -1,6 +1,7 @@
 #include "commands/ScanCommand.hpp"
 
 #include "core/Config.hpp"
+#include "core/ScanHistory.hpp"
 #include "scanner/ScannerEngine.hpp"
 #include "utils/Formatter.hpp"
 
@@ -116,14 +117,16 @@ void printSummary(const std::vector<ScanResult>& results)
 int ScanCommand::execute(const ParsedArgs& args)
 {
     AppConfig config = ConfigLoader::load();
-    if (args.category.empty() && !config.defaultCategory.empty())
-        config.defaultCategory = config.defaultCategory;
+    ParsedArgs effectiveArgs = args;
+    if (effectiveArgs.category.empty() && !config.defaultCategory.empty())
+        effectiveArgs.category = config.defaultCategory;
 
     ScannerEngine engine;
     if (args.verbose)
         std::cout << "Scanning...\n";
-    auto results = engine.scan(args.targets, config);
-    auto filtered = applyFiltersAndSort(results, args);
+    auto results = engine.scan(effectiveArgs.targets, config);
+    ScanHistory::getInstance().recordScan(results);
+    auto filtered = applyFiltersAndSort(results, effectiveArgs);
 
     uint64_t total = 0;
     for (const auto& result : filtered)

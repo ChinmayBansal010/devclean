@@ -1,5 +1,6 @@
 #include "scanner/PluginLoader.hpp"
 
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
@@ -14,6 +15,10 @@ PluginLoader& PluginLoader::getInstance()
 
 std::vector<CacheDefinition> PluginLoader::loadPlugins()
 {
+    loadedPlugins.clear();
+    failedPlugins.clear();
+    loadedPluginNames.clear();
+
     std::filesystem::path pluginDir;
 
 #ifdef _WIN32
@@ -102,6 +107,14 @@ CacheDefinition PluginLoader::parsePluginJson(
     if (j.contains("osSupport") && j["osSupport"].is_array()) {
         for (const auto& support : j["osSupport"]) {
             cache.osSupport.push_back(support.get<std::string>());
+        }
+    }
+
+    if (j.contains("cachePaths") && j["cachePaths"].is_array()) {
+        for (const auto& path : j["cachePaths"]) {
+            if (path.is_string()) {
+                cache.cachePaths.emplace_back(path.get<std::string>());
+            }
         }
     }
 

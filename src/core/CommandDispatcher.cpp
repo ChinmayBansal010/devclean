@@ -23,8 +23,8 @@ void printHelp()
     std::cout << "  stats        Show aggregate cache statistics\n";
     std::cout << "  version      Print the current version\n";
     std::cout << "\nTargets:\n";
-    std::cout << "  python, rust, javascript, java, build\n";
-    std::cout << "  Any cache name or alias such as pip, cargo, npm, pnpm, gradle, maven, conda, ccache\n";
+    std::cout << "  python, rust, javascript, java, cpp, containers, editor, build, package managers\n";
+    std::cout << "  Any cache name or alias such as pip, poetry, uv, cargo, npm, pnpm, gradle, maven, ccache, conan, vcpkg\n";
     std::cout << "\nOptions:\n";
     std::cout << "  --json              Emit JSON output\n";
     std::cout << "  --verbose           Include additional details\n";
@@ -40,6 +40,8 @@ void printHelp()
     std::cout << "  devclean scan\n";
     std::cout << "  devclean analyze --report markdown\n";
     std::cout << "  devclean clean --dry-run --exclude npm\n";
+    std::cout << "  devclean analyze --category build --report json\n";
+    std::cout << "  devclean stats --json\n";
 }
 
 } // namespace

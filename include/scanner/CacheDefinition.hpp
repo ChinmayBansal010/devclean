@@ -16,4 +16,5 @@ struct CacheDefinition
     std::vector<std::string> osSupport;
     int priority = 0;
     bool enabled = true;
+    std::vector<std::filesystem::path> cachePaths;
 };

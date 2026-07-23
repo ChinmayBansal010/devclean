@@ -112,11 +112,14 @@ std::vector<ScanResult> selectCandidates(const std::vector<ScanResult>& candidat
 int CleanCommand::execute(const ParsedArgs& args)
 {
     AppConfig config = ConfigLoader::load();
+    ParsedArgs effectiveArgs = args;
+    if (effectiveArgs.category.empty() && !config.defaultCategory.empty())
+        effectiveArgs.category = config.defaultCategory;
     ScannerEngine scanner;
     CleanEngine cleaner;
 
-    auto results = scanner.scan(args.targets, config);
-    auto candidates = applyFilters(results, args);
+    auto results = scanner.scan(effectiveArgs.targets, config);
+    auto candidates = applyFilters(results, effectiveArgs);
     candidates.erase(std::remove_if(candidates.begin(), candidates.end(), [](const ScanResult& result) {
         return !result.found;
     }), candidates.end());
@@ -162,6 +165,19 @@ int CleanCommand::execute(const ParsedArgs& args)
         for (const auto& warning : warnings)
             std::cout << "    warning: " << warning << "\n";
     }
+
+    bool hasSafetyWarnings = false;
+    for (const auto& candidate : selected)
+    {
+        if (!ToolDetector::getInstance().getWarningsForCache(candidate.name).empty())
+        {
+            hasSafetyWarnings = true;
+            break;
+        }
+    }
+
+    if (hasSafetyWarnings && !args.force)
+        std::cout << "\nSafety warning: related tools appear active. Review the warnings above before continuing.\n";
 
     if (args.dryRun)
     {

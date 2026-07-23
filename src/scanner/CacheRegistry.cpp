@@ -1,6 +1,7 @@
 #include "scanner/CacheRegistry.hpp"
 
 #include <algorithm>
+#include <cctype>
 #include <cstdlib>
 #include <string>
 
@@ -76,10 +77,11 @@ std::vector<CacheDefinition> CacheRegistry::getCaches()
     caches.push_back({"ccache", {"ccache", "build"}, {}, localAppDataPath / "ccache", "build", "Ccache build cache", {"CCACHE_DIR"}, {"windows", "linux", "macos"}, 10});
     caches.push_back({"conan", {"conan", "cpp"}, {}, userProfilePath / ".conan" / "p", "cpp", "Conan package cache", {"CONAN_USER_HOME"}, {"windows", "linux", "macos"}, 8});
     caches.push_back({"vcpkg", {"vcpkg", "cpp"}, {}, userProfilePath / "vcpkg" / "downloads", "cpp", "vcpkg downloads cache", {"VCPKG_ROOT"}, {"windows", "linux", "macos"}, 8});
-    caches.push_back({"docker", {"docker", "containers"}, {}, userProfilePath / ".docker" / "builder" / "docker-buildxin", "containers", "Docker builder cache", {"DOCKER_BUILDKIT"}, {"windows", "linux", "macos"}, 8});
+    caches.push_back({"docker-builder", {"docker", "builder", "containers"}, {}, userProfilePath / ".docker" / "builder", "containers", "Docker builder cache", {"DOCKER_BUILDKIT"}, {"windows", "linux", "macos"}, 8});
+    caches.push_back({"docker-volumes", {"docker", "volumes", "containers"}, {}, userProfilePath / ".local" / "share" / "docker" / "volumes", "containers", "Docker volumes cache", {"DOCKER_HOST"}, {"windows", "linux", "macos"}, 8});
     caches.push_back({"podman", {"podman", "containers"}, {}, userProfilePath / ".local" / "share" / "containers", "containers", "Podman container storage", {"PODMAN_USERNS"}, {"windows", "linux", "macos"}, 8});
-    caches.push_back({"vscode", {"vscode", "editor"}, {}, userProfilePath / "AppData" / "Roaming" / "Code" / "CachedData", "editor", "VS Code cache", {"VSCODE_PORTABLE"}, {"windows", "linux", "macos"}, 6});
-    caches.push_back({"jetbrains", {"jetbrains", "editor"}, {}, userProfilePath / ".idea" / "system", "editor", "JetBrains IDE cache", {"JETBRAINS_IDE"}, {"windows", "linux", "macos"}, 6});
+    caches.push_back({"vscode", {"vscode", "editor", "code", "visual studio code"}, {}, userProfilePath / "AppData" / "Roaming" / "Code" / "CachedData", "editor", "VS Code cache", {"VSCODE_PORTABLE"}, {"windows", "linux", "macos"}, 6});
+    caches.push_back({"jetbrains", {"jetbrains", "editor", "idea", "intellij", "clion", "pycharm", "goland"}, {}, userProfilePath / ".idea" / "system", "editor", "JetBrains IDE cache", {"JETBRAINS_IDE"}, {"windows", "linux", "macos"}, 6});
     caches.push_back({"cmake", {"cmake", "build"}, {}, userProfilePath / ".cmake", "build", "CMake build cache", {"CMAKE_BUILD_PARALLEL_LEVEL"}, {"windows", "linux", "macos"}, 7});
     caches.push_back({"meson", {"meson", "build"}, {}, userProfilePath / ".cache" / "meson", "build", "Meson build cache", {"MESON_DIR"}, {"windows", "linux", "macos"}, 7});
     caches.push_back({"bazel", {"bazel", "build"}, {}, userProfilePath / "_bazel", "build", "Bazel cache", {"BAZELISK_HOME"}, {"windows", "linux", "macos"}, 7});
@@ -108,10 +110,11 @@ std::vector<CacheDefinition> CacheRegistry::getCaches()
     caches.push_back({"ccache", {"ccache", "build"}, homePath / ".cache" / "ccache", {}, "build", "Ccache build cache", {"CCACHE_DIR"}, {"windows", "linux", "macos"}, 10});
     caches.push_back({"conan", {"conan", "cpp"}, homePath / ".conan" / "p", {}, "cpp", "Conan package cache", {"CONAN_USER_HOME"}, {"windows", "linux", "macos"}, 8});
     caches.push_back({"vcpkg", {"vcpkg", "cpp"}, homePath / ".cache" / "vcpkg", {}, "cpp", "vcpkg downloads cache", {"VCPKG_ROOT"}, {"windows", "linux", "macos"}, 8});
-    caches.push_back({"docker", {"docker", "containers"}, homePath / ".cache" / "docker", {}, "containers", "Docker builder cache", {"DOCKER_BUILDKIT"}, {"windows", "linux", "macos"}, 8});
+    caches.push_back({"docker-builder", {"docker", "builder", "containers"}, homePath / ".cache" / "docker" / "builder", {}, "containers", "Docker builder cache", {"DOCKER_BUILDKIT"}, {"windows", "linux", "macos"}, 8});
+    caches.push_back({"docker-volumes", {"docker", "volumes", "containers"}, homePath / ".local" / "share" / "docker" / "volumes", {}, "containers", "Docker volumes cache", {"DOCKER_HOST"}, {"windows", "linux", "macos"}, 8});
     caches.push_back({"podman", {"podman", "containers"}, homePath / ".local" / "share" / "containers", {}, "containers", "Podman container storage", {"PODMAN_USERNS"}, {"windows", "linux", "macos"}, 8});
-    caches.push_back({"vscode", {"vscode", "editor"}, homePath / ".cache" / "Code", {}, "editor", "VS Code cache", {"VSCODE_PORTABLE"}, {"windows", "linux", "macos"}, 6});
-    caches.push_back({"jetbrains", {"jetbrains", "editor"}, homePath / ".cache" / "JetBrains", {}, "editor", "JetBrains IDE cache", {"JETBRAINS_IDE"}, {"windows", "linux", "macos"}, 6});
+    caches.push_back({"vscode", {"vscode", "editor", "code", "visual studio code"}, homePath / ".cache" / "Code", {}, "editor", "VS Code cache", {"VSCODE_PORTABLE"}, {"windows", "linux", "macos"}, 6});
+    caches.push_back({"jetbrains", {"jetbrains", "editor", "idea", "intellij", "clion", "pycharm", "goland"}, homePath / ".cache" / "JetBrains", {}, "editor", "JetBrains IDE cache", {"JETBRAINS_IDE"}, {"windows", "linux", "macos"}, 6});
     caches.push_back({"cmake", {"cmake", "build"}, homePath / ".cache" / "cmake", {}, "build", "CMake build cache", {"CMAKE_BUILD_PARALLEL_LEVEL"}, {"windows", "linux", "macos"}, 7});
     caches.push_back({"meson", {"meson", "build"}, homePath / ".cache" / "meson", {}, "build", "Meson build cache", {"MESON_DIR"}, {"windows", "linux", "macos"}, 7});
     caches.push_back({"bazel", {"bazel", "build"}, homePath / ".cache" / "bazel", {}, "build", "Bazel cache", {"BAZELISK_HOME"}, {"windows", "linux", "macos"}, 7});

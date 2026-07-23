@@ -28,10 +28,10 @@ jobs:
         with:
           name: devclean-packages
           path: |
-            build/*.deb
-            build/*.rpm
-            build/*.tar.gz
-            build/*.zip
+            devclean-*.deb
+            devclean-*.rpm
+            devclean-*.tar.gz
+            devclean-*.zip
           if-no-files-found: warn
 
   release:

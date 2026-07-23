@@ -29,11 +29,12 @@ devclean version
 ## Configuration
 
 Configuration is loaded automatically from:
-- Linux: `~/.config/devclean/config.toml`
-- Windows: `%APPDATA%/devclean/config.toml`
+- Linux: `~/.config/devclean/config.json`
+- Windows: `%APPDATA%/devclean/config.json`
 
 Supported keys include:
-- `disabled = ["gradle", "cargo"]`
-- `ignored = ["gradle", "cargo"]`
-- `default_sort = "size"`
-- `default_category = "python"`
+- `disabledCaches = ["gradle", "cargo"]`
+- `ignoredCaches = ["gradle", "cargo"]`
+- `defaultSort = "size"`
+- `defaultCategory = "python"`
+- `schemaVersion = 3`

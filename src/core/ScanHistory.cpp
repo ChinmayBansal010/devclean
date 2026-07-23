@@ -1,8 +1,11 @@
 #include "core/ScanHistory.hpp"
 
 #include <chrono>
+#include <cstdlib>
 #include <fstream>
 #include <iomanip>
+#include <map>
+#include <filesystem>
 #include <nlohmann/json.hpp>
 #include <sstream>
 

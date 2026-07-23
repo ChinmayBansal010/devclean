@@ -3,6 +3,7 @@
 #include "core/Config.hpp"
 #include "scanner/ScanResult.hpp"
 
+#include <chrono>
 #include <string>
 #include <vector>
 

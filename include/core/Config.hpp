@@ -7,6 +7,7 @@
 
 struct AppConfig
 {
+    int schemaVersion = 3;
     std::vector<std::string> disabledCaches;
     std::vector<std::string> ignoredCaches;
     std::string defaultColor = "none";

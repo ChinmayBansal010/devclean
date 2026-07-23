@@ -3,7 +3,11 @@ name: build-test-package
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
   pull_request:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -12,10 +16,28 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-cmake@v1
       - name: Configure
-        run: cmake -S . -B build
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
       - name: Build
         run: cmake --build build -j2
       - name: Test
-        run: ./build/devclean_tests
+        run: ctest --test-dir build --output-on-failure
       - name: Package
         run: cpack --config build/CPackConfig.cmake
+      - uses: actions/upload-artifact@v4
+        with:
+          name: devclean-packages
+          path: |
+            build/*.deb
+            build/*.rpm
+            build/*.tar.gz
+            build/*.zip
+          if-no-files-found: warn
+      - name: Create GitHub release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/*.deb
+            build/*.rpm
+            build/*.tar.gz
+            build/*.zip

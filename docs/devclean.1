@@ -5,7 +5,7 @@ devclean \- scan and clean developer cache directories
 .B devclean
 .RI [ command ] [ options ] [ targets ]
 .SH DESCRIPTION
-devclean scans common developer cache directories and can remove them safely.
+devclean scans common developer cache directories and can remove them safely. It supports cache analysis, recommendations, reports, and packaging-oriented workflows.
 .SH COMMANDS
 .TP
 .B scan
@@ -16,6 +16,9 @@ Analyze cache growth and provide recommendations.
 .TP
 .B clean
 Delete selected caches.
+.TP
+.B stats
+Show aggregate cache statistics.
 .SH OPTIONS
 .TP
 .B --report markdown|html|csv|json
@@ -25,8 +28,14 @@ Emit a report in the requested format.
 Show what would be removed without deleting anything.
 .SH EXAMPLES
 .TP
-.B devclean scan
-Scan the default cache catalog.
+.B devclean scan --category python
+Scan Python-related caches.
 .TP
 .B devclean analyze --report markdown
-Generate a markdown analysis report.
+Generate a markdown analysis report with recommendations.
+.TP
+.B devclean clean --dry-run --exclude npm
+Preview cleanup without deleting anything.
+.TP
+.B devclean analyze --category build --report json
+Create a JSON analysis report for the build cache category.

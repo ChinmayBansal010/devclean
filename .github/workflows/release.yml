@@ -2,8 +2,9 @@ name: build-test-package
 
 on:
   push:
-    branches: [ main ]
-    tags: [ 'v*' ]
+    branches: [main]
+    tags:
+      - "v*"
   pull_request:
 
 permissions:
@@ -14,55 +15,91 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+
     runs-on: ${{ matrix.os }}
+
     steps:
       - uses: actions/checkout@v4
+
       - name: Configure
         run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
       - name: Build
         run: cmake --build build -j2
+
       - name: Test
         run: ctest --test-dir build --output-on-failure
+
       - name: Package
         run: cpack --config build/CPackConfig.cmake -B cpack-output
+
       - name: Stage release artifacts
+        shell: bash
         run: |
-          cmake -E make_directory release-artifacts/${{ matrix.os }}
-          cmake -E copy_directory cpack-output release-artifacts/${{ matrix.os }}
+          mkdir -p release-artifacts/${{ matrix.os }}
+
+          find cpack-output -type f \
+            \( \
+              -name "*.zip" -o \
+              -name "*.tar.gz" -o \
+              -name "*.deb" -o \
+              -name "*.rpm" -o \
+              -name "*.exe" -o \
+              -name "*.msi" -o \
+              -name "*.pkg" \
+            \) \
+            -exec cp {} release-artifacts/${{ matrix.os }}/ \;
+
       - uses: actions/upload-artifact@v4
         with:
           name: devclean-packages-${{ matrix.os }}
-          path: release-artifacts/${{ matrix.os }}/*
+          path: release-artifacts/${{ matrix.os }}
           if-no-files-found: warn
 
   release:
     needs: build
+
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/download-artifact@v4
         with:
           path: release-artifacts
           merge-multiple: true
+
       - name: Generate release manifest
+        shell: bash
         run: |
           {
             echo "# devclean release manifest"
             echo
-            for os_dir in release-artifacts/*; do
-              [ -d "$os_dir" ] || continue
-              os_name="$(basename "$os_dir")"
-              echo "## ${os_name}"
-              find "$os_dir" -maxdepth 1 -type f | sort | while read -r file; do
-                echo "- $(basename "$file")"
-              done
-              echo
+
+            find release-artifacts -type f | sort | while read file; do
+              echo "- $(basename "$file")"
             done
           } > release-manifest.txt
-      - name: Create GitHub release
+
+      - name: Verify release files
+        run: |
+          echo "Release contents:"
+          find release-artifacts -type f
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            release-artifacts/**/*
+            release-artifacts/**/*.zip
+            release-artifacts/**/*.tar.gz
+            release-artifacts/**/*.deb
+            release-artifacts/**/*.rpm
+            release-artifacts/**/*.exe
+            release-artifacts/**/*.msi
+            release-artifacts/**/*.pkg
             release-manifest.txt
+          fail_on_unmatched_files: false

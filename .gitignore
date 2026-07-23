@@ -16,6 +16,7 @@ Makefile
 .ninja_deps
 .ninja_log
 build.ninja
+release-artifacts-ninja
 
 # Visual Studio
 .vs/

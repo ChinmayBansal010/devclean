@@ -28,12 +28,12 @@ jobs:
         run: cpack --config build/CPackConfig.cmake -B cpack-output
       - name: Stage release artifacts
         run: |
-          cmake -E make_directory release-artifacts
-          cmake -E copy_directory cpack-output release-artifacts
+          cmake -E make_directory release-artifacts/${{ matrix.os }}
+          cmake -E copy_directory cpack-output release-artifacts/${{ matrix.os }}
       - uses: actions/upload-artifact@v4
         with:
           name: devclean-packages-${{ matrix.os }}
-          path: release-artifacts/*
+          path: release-artifacts/${{ matrix.os }}/*
           if-no-files-found: warn
 
   release:
@@ -48,4 +48,4 @@ jobs:
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          files: release-artifacts/*
+          files: release-artifacts/**/*

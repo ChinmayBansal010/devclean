@@ -45,7 +45,24 @@ jobs:
         with:
           path: release-artifacts
           merge-multiple: true
+      - name: Generate release manifest
+        run: |
+          {
+            echo "# devclean release manifest"
+            echo
+            for os_dir in release-artifacts/*; do
+              [ -d "$os_dir" ] || continue
+              os_name="$(basename "$os_dir")"
+              echo "## ${os_name}"
+              find "$os_dir" -maxdepth 1 -type f | sort | while read -r file; do
+                echo "- $(basename "$file")"
+              done
+              echo
+            done
+          } > release-manifest.txt
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          files: release-artifacts/**/*
+          files: |
+            release-artifacts/**/*
+            release-manifest.txt

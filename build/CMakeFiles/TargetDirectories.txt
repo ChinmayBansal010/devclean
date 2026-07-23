@@ -1,2 +1,0 @@
-/home/chinm/Projects/devclean/build/CMakeFiles/edit_cache.dir
-/home/chinm/Projects/devclean/build/CMakeFiles/rebuild_cache.dir

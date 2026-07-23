@@ -1,0 +1,32 @@
+.TH DEVCLEAN 1 "July 2026" "devclean 0.1.0" "User Commands"
+.SH NAME
+devclean \- scan and clean developer cache directories
+.SH SYNOPSIS
+.B devclean
+.RI [ command ] [ options ] [ targets ]
+.SH DESCRIPTION
+devclean scans common developer cache directories and can remove them safely.
+.SH COMMANDS
+.TP
+.B scan
+Scan known caches.
+.TP
+.B analyze
+Analyze cache growth and provide recommendations.
+.TP
+.B clean
+Delete selected caches.
+.SH OPTIONS
+.TP
+.B --report markdown|html|csv|json
+Emit a report in the requested format.
+.TP
+.B --dry-run
+Show what would be removed without deleting anything.
+.SH EXAMPLES
+.TP
+.B devclean scan
+Scan the default cache catalog.
+.TP
+.B devclean analyze --report markdown
+Generate a markdown analysis report.

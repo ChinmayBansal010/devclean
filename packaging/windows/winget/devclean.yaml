@@ -1,0 +1,6 @@
+PackageIdentifier: devclean
+PackageVersion: 0.1.0
+InstallerType: portable
+Installers:
+  - Architecture: x64
+    InstallerUrl: https://example.com/devclean-x64.zip

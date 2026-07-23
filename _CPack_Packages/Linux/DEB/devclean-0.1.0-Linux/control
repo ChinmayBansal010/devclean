@@ -1,0 +1,9 @@
+Architecture: amd64
+Description: Developer cache cleaner
+Maintainer: devclean@example.com
+Package: devclean
+Priority: optional
+Section: devel
+Version: 0.1.0
+Installed-Size: 1408
+

@@ -1,0 +1,25 @@
++ umask 022
++ cd /home/chinm/Projects/devclean/_CPack_Packages/Linux/RPM/BUILD
++ mv /home/chinm/Projects/devclean/_CPack_Packages/Linux/RPM/devclean-0.1.0-Linux /home/chinm/Projects/devclean/_CPack_Packages/Linux/RPM/tmpBBroot
++ RPM_EC=0
++ jobs -p
++ exit 0
++ umask 022
++ cd /home/chinm/Projects/devclean/_CPack_Packages/Linux/RPM/BUILD
++ /bin/rm -rf /home/chinm/Projects/devclean/_CPack_Packages/Linux/RPM/devclean-0.1.0-Linux
++ /bin/mkdir -p /home/chinm/Projects/devclean/_CPack_Packages/Linux/RPM
++ /bin/mkdir /home/chinm/Projects/devclean/_CPack_Packages/Linux/RPM/devclean-0.1.0-Linux
++ [ -e /home/chinm/Projects/devclean/_CPack_Packages/Linux/RPM/devclean-0.1.0-Linux ]
++ rm -rf /home/chinm/Projects/devclean/_CPack_Packages/Linux/RPM/devclean-0.1.0-Linux
++ mv /home/chinm/Projects/devclean/_CPack_Packages/Linux/RPM/tmpBBroot /home/chinm/Projects/devclean/_CPack_Packages/Linux/RPM/devclean-0.1.0-Linux
++ /usr/lib/rpm/brp-compress /usr
++ /usr/lib/rpm/brp-elfperms
++ /usr/lib/rpm/brp-strip /usr/bin/strip
++ /usr/lib/rpm/brp-strip-static-archive /usr/bin/strip
++ /usr/lib/rpm/brp-strip-comment-note /usr/bin/strip /usr/bin/objdump
++ /usr/lib/rpm/brp-remove-la-files
++ umask 022
++ cd /home/chinm/Projects/devclean/_CPack_Packages/Linux/RPM/BUILD
++ RPM_EC=0
++ jobs -p
++ exit 0

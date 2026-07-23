@@ -1,0 +1,53 @@
+# Build directories
+build/
+build-*/
+cmake-build-*/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+CTestTestfile.cmake
+Testing/
+Makefile
+
+# Ninja
+.ninja_deps
+.ninja_log
+build.ninja
+
+# Visual Studio
+.vs/
+*.vcxproj.user
+
+# VS Code
+.vscode/
+**/__pycache__/**
+
+# CLion
+.idea/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Logs
+*.log
+
+# Coverage
+coverage/
+*.gcda
+*.gcno
+*.profraw
+*.profdata
+
+# Executables
+devclean
+devclean.exe
+
+# Temporary files
+*.tmp
+*.bak

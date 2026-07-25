@@ -138,11 +138,13 @@ jobs:
 
     - name: Run cppcheck
       run: |
-        cppcheck \
-        --enable=all \
-        --suppress=passedByValue \
-        --suppress=missingIncludeSystem \
-        --error-exitcode=1
+        find src include tests \
+          \( -name "*.cpp" -o -name "*.hpp" -o -name "*.h" \) \
+          -print0 | xargs -0 cppcheck \
+          --enable=warning,portability \
+          --std=c++23 \
+          --error-exitcode=1 \
+          --inline-suppr
   package:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: [build, sanitizers]

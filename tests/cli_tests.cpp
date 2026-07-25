@@ -123,11 +123,24 @@ int main()
     setEnvVar("USERPROFILE", tempRoot.string());
     #endif
 
-    std::filesystem::create_directories(
-    tempRoot / ".config" / "devclean" / "plugins");
+    std::filesystem::path pluginDir;
 
-    std::filesystem::create_directories(
-        tempRoot / "plugin-cache" / "alt");
+    #ifdef _WIN32
+    const char* appData = std::getenv("APPDATA");
+    assert(appData != nullptr);
+
+    pluginDir = std::filesystem::path(appData)
+            / "devclean"
+            / "plugins";
+    #else
+    pluginDir = tempRoot
+            / ".config"
+            / "devclean"
+            / "plugins";
+    #endif
+
+    std::filesystem::create_directories(pluginDir);
+
 
     AppConfig customConfig;
     CacheDefinition customCache;
@@ -139,7 +152,11 @@ int main()
     customCache.aliases = {"custom"};
     customCache.environmentVariables = {"DEV_CLEAN_TEST"};
     customCache.osSupport = {"linux", "windows"};
+    #ifdef _WIN32
+    customCache.windowsPath = tempRoot / "custom-cache";
+    #else
     customCache.linuxPath = tempRoot / "custom-cache";
+    #endif
     customCache.cachePaths = {tempRoot / "custom-cache" / "alt"};
     customConfig.customCaches.push_back(customCache);
     ConfigLoader::save(customConfig);
@@ -153,8 +170,7 @@ int main()
     assert(reloadedConfig.customCaches[0].aliases[0] == "custom");
     assert(!reloadedConfig.customCaches[0].cachePaths.empty());
 
-    const auto pluginJson =
-        tempRoot / ".config" / "devclean" / "plugins" / "custom-plugin.json";
+    const auto pluginJson = pluginDir / "custom-plugin.json";
 
     std::ofstream pluginFile(pluginJson);
     assert(pluginFile.is_open());
@@ -162,6 +178,7 @@ int main()
     const auto pluginPath = tempRoot / "plugin-cache";
     const auto pluginAlt = pluginPath / "alt";
 
+    #ifdef _WIN32
     pluginFile
         << "{"
         << "\"name\":\"plugin-cache\","
@@ -171,17 +188,32 @@ int main()
         << "\"priority\":5,"
         << "\"aliases\":[\"plugin\"],"
         << "\"environmentVariables\":[\"PLUGIN_CACHE\"],"
-        << "\"osSupport\":[\"linux\"],"
-        << "\"path\":\"" << pluginPath.string() << "\","
+        << "\"osSupport\":[\"linux\",\"windows\"],"
+        << "\"windowsPath\":\"" << pluginPath.string() << "\","
         << "\"cachePaths\":[\"" << pluginAlt.string() << "\"]"
         << "}";
+    #else
+    pluginFile
+        << "{"
+        << "\"name\":\"plugin-cache\","
+        << "\"category\":\"build\","
+        << "\"description\":\"Loaded from plugin\","
+        << "\"enabled\":true,"
+        << "\"priority\":5,"
+        << "\"aliases\":[\"plugin\"],"
+        << "\"environmentVariables\":[\"PLUGIN_CACHE\"],"
+        << "\"osSupport\":[\"linux\",\"windows\"],"
+        << "\"linuxPath\":\"" << pluginPath.string() << "\","
+        << "\"cachePaths\":[\"" << pluginAlt.string() << "\"]"
+        << "}";
+    #endif
 
     pluginFile.close();
 
     assert(std::filesystem::exists(pluginJson));
 
     const auto loadedPlugins = PluginLoader::getInstance().loadPlugins();
-    
+
     assert(!loadedPlugins.empty());
     assert(std::any_of(loadedPlugins.begin(), loadedPlugins.end(), [](const CacheDefinition& cache) {
         return cache.name == "plugin-cache";
@@ -190,7 +222,7 @@ int main()
         return cache.name == "plugin-cache" && !cache.cachePaths.empty();
     }));
 
-    std::ofstream invalidPluginFile(tempRoot / ".config" / "devclean" / "plugins" / "invalid-plugin.json");
+    std::ofstream invalidPluginFile(pluginDir / "invalid-plugin.json");
     invalidPluginFile << R"({"name":"invalid/plugin","category":"build","path":"../escape"})";
     invalidPluginFile.close();
     const auto loadedAfterInvalid = PluginLoader::getInstance().loadPlugins();
@@ -203,13 +235,6 @@ int main()
     if (!homePath.empty())
         assert(Filesystem::isProtectedPath(homePath));
 
-    std::cout << "HOME = " << std::getenv("HOME") << std::endl;
-
-    #ifdef _WIN32
-    std::cout << "USERPROFILE = " << std::getenv("USERPROFILE") << std::endl;
-    #endif
-
-    std::cout << "homePath = " << homePath << std::endl;
     CleanEngine cleaner;
     const auto protectedRemoval = cleaner.removeDirectory(homePath.empty() ? std::filesystem::path("/") : std::filesystem::path(homePath));
     assert(!protectedRemoval.success);

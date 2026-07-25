@@ -29,8 +29,6 @@ jobs:
             c_compiler: clang
             cxx_compiler: clang++
           - os: windows-latest
-            c_compiler: cl
-            cxx_compiler: cl
 
     runs-on: ${{ matrix.os }}
 
@@ -38,6 +36,8 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
+    - uses: ilammy/msvc-dev-cmd@v1
+      if: runner.os == 'Windows'
 
     - name: Install dependencies (Linux)
       if: runner.os == 'Linux'
@@ -52,17 +52,25 @@ jobs:
         brew install ninja
 
     - name: Configure CMake
-      run: >
-        cmake -B build
-        -G Ninja
-        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-        -DCMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }}
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install
+      shell: bash
+      run: |
+        if [ "${{ runner.os }}" = "Windows" ]; then
+          cmake -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install"
+        else
+          cmake -B build \
+            -G Ninja \
+            -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
+            -DCMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }} \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install"
+        fi
 
     - name: Build
-      run: cmake --build build --config ${{ matrix.build_type }} -j $(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
-
+      run: cmake --build build --config ${{ matrix.build_type }} --parallel
+    
     - name: Test
       working-directory: build
       run: ctest --output-on-failure --build-config ${{ matrix.build_type }}
@@ -92,7 +100,7 @@ jobs:
         -DENABLE_SANITIZERS=ON
 
     - name: Build
-      run: cmake --build build -j $(nproc)
+      run: cmake --build build --parallel
 
     - name: Test with sanitizers
       working-directory: build
@@ -108,7 +116,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update -qq
-        sudo apt-get install -y -qq g++-13 cmake ninja-build clang-tidy cppcheck
+        sudo apt-get install -y -qq g++-13 cmake ninja-build clang-tidy clang-tools cppcheck
 
     - name: Configure CMake
       run: >
@@ -120,12 +128,13 @@ jobs:
         -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
     - name: Build (for compile_commands.json)
-      run: cmake --build build -j $(nproc)
+      run: cmake --build build --parallel
 
     - name: Run clang-tidy
       run: |
         cd build
-        run-clang-tidy -p . -quiet 2>&1 | head -100 || true
+        find ../src ../include \( -name '*.cpp' -o -name '*.hpp' \) | \
+        xargs clang-tidy -p .
 
     - name: Run cppcheck
       run: |
@@ -146,6 +155,8 @@ jobs:
       with:
         submodules: recursive
 
+    - uses: ilammy/msvc-dev-cmd@v1
+      if: runner.os == 'Windows'
     - name: Install dependencies (Linux)
       if: runner.os == 'Linux'
       run: |
@@ -158,15 +169,29 @@ jobs:
         brew update
         brew install ninja
 
+    - name: Install dependencies (Windows)
+      if: runner.os == 'Windows'
+      shell: powershell
+      run: |
+        choco install ninja -y
+
     - name: Configure CMake
-      run: >
-        cmake -B build
-        -G Ninja
-        -DCMAKE_BUILD_TYPE=Release
-        -DCMAKE_INSTALL_PREFIX=/usr
+      shell: bash
+      run: |
+        if [ "${{ runner.os }}" = "Windows" ]; then
+          cmake -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install"
+        else
+          cmake -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr
+        fi
 
     - name: Build
-      run: cmake --build build -j $(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
+      run: cmake --build build --parallel
 
     - name: Package
       working-directory: build

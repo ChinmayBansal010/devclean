@@ -177,6 +177,17 @@ int main()
 
     const auto pluginPath = tempRoot / "plugin-cache";
     const auto pluginAlt = pluginPath / "alt";
+        auto escapeJson = [](std::string s) {
+        size_t pos = 0;
+        while ((pos = s.find('\\', pos)) != std::string::npos) {
+            s.replace(pos, 1, "\\\\");
+            pos += 2;
+        }
+        return s;
+    };
+
+    const std::string pluginPathStr = escapeJson(pluginPath.string());
+    const std::string pluginAltStr = escapeJson(pluginAlt.string());
 
     #ifdef _WIN32
     pluginFile
@@ -189,8 +200,8 @@ int main()
         << "\"aliases\":[\"plugin\"],"
         << "\"environmentVariables\":[\"PLUGIN_CACHE\"],"
         << "\"osSupport\":[\"linux\",\"windows\"],"
-        << "\"windowsPath\":\"" << pluginPath.string() << "\","
-        << "\"cachePaths\":[\"" << pluginAlt.string() << "\"]"
+        << "\"windowsPath\":\"" << pluginPathStr << "\","
+        << "\"cachePaths\":[\"" << pluginAltStr << "\"]"
         << "}";
     #else
     pluginFile
@@ -203,8 +214,8 @@ int main()
         << "\"aliases\":[\"plugin\"],"
         << "\"environmentVariables\":[\"PLUGIN_CACHE\"],"
         << "\"osSupport\":[\"linux\",\"windows\"],"
-        << "\"linuxPath\":\"" << pluginPath.string() << "\","
-        << "\"cachePaths\":[\"" << pluginAlt.string() << "\"]"
+        << "\"linuxPath\":\"" << pluginPathStr << "\","
+        << "\"cachePaths\":[\"" << pluginAltStr << "\"]"
         << "}";
     #endif
 

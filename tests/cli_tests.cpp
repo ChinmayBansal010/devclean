@@ -116,6 +116,12 @@ int main()
         std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     setEnvVar("HOME", tempRoot.string());
 
+    std::filesystem::create_directories(
+    tempRoot / ".config" / "devclean" / "plugins");
+
+    std::filesystem::create_directories(
+        tempRoot / "plugin-cache" / "alt");
+
     AppConfig customConfig;
     CacheDefinition customCache;
     customCache.name = "custom-cache";
@@ -140,11 +146,35 @@ int main()
     assert(reloadedConfig.customCaches[0].aliases[0] == "custom");
     assert(!reloadedConfig.customCaches[0].cachePaths.empty());
 
-    std::ofstream pluginFile(tempRoot / ".config" / "devclean" / "plugins" / "custom-plugin.json");
-    pluginFile << R"({"name":"plugin-cache","category":"build","description":"Loaded from plugin","enabled":true,"priority":5,"aliases":["plugin"],"environmentVariables":["PLUGIN_CACHE"],"osSupport":["linux"],"path":"/tmp/plugin-cache","cachePaths":["/tmp/plugin-cache/alt"]})";
+    const auto pluginJson =
+        tempRoot / ".config" / "devclean" / "plugins" / "custom-plugin.json";
+
+    std::ofstream pluginFile(pluginJson);
+    assert(pluginFile.is_open());
+
+    const auto pluginPath = tempRoot / "plugin-cache";
+    const auto pluginAlt = pluginPath / "alt";
+
+    pluginFile
+        << "{"
+        << "\"name\":\"plugin-cache\","
+        << "\"category\":\"build\","
+        << "\"description\":\"Loaded from plugin\","
+        << "\"enabled\":true,"
+        << "\"priority\":5,"
+        << "\"aliases\":[\"plugin\"],"
+        << "\"environmentVariables\":[\"PLUGIN_CACHE\"],"
+        << "\"osSupport\":[\"linux\"],"
+        << "\"path\":\"" << pluginPath.string() << "\","
+        << "\"cachePaths\":[\"" << pluginAlt.string() << "\"]"
+        << "}";
+
     pluginFile.close();
 
+    assert(std::filesystem::exists(pluginJson));
+
     const auto loadedPlugins = PluginLoader::getInstance().loadPlugins();
+    
     assert(!loadedPlugins.empty());
     assert(std::any_of(loadedPlugins.begin(), loadedPlugins.end(), [](const CacheDefinition& cache) {
         return cache.name == "plugin-cache";

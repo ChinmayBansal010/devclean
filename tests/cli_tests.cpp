@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <chrono>
 
 namespace {
 
@@ -109,8 +110,10 @@ int main()
         assert(migrated.schemaVersion >= 3);
     }
 
-    const std::filesystem::path tempRoot = std::filesystem::temp_directory_path() / "devclean-cli-tests";
-    std::filesystem::create_directories(tempRoot / ".config" / "devclean" / "plugins");
+    const auto tempRoot =
+        std::filesystem::temp_directory_path() /
+        ("devclean-" +
+        std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     setEnvVar("HOME", tempRoot.string());
 
     AppConfig customConfig;
@@ -174,7 +177,7 @@ int main()
     const auto removed = cleaner.removeDirectory(safeCacheDir);
     assert(removed.success);
     assert(!std::filesystem::exists(safeCacheDir));
-
+    std::filesystem::remove_all(tempRoot);
     std::cout << "devclean CLI tests passed" << std::endl;
     return 0;
 }

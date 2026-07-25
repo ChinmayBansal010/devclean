@@ -97,11 +97,20 @@ include(CPack)
 
 if(ENABLE_SANITIZERS)
     if(MSVC)
-        target_compile_options(devclean_core PRIVATE /fsanitize=address /Zi)
-        target_link_options(devclean_core PRIVATE /INCREMENTAL:NO /debug /fsanitize=address)
+        foreach(target devclean_core devclean devclean_tests devclean_benchmark)
+            target_compile_options(${target} PRIVATE /fsanitize=address /Zi)
+            target_link_options(${target} PRIVATE /INCREMENTAL:NO /DEBUG /fsanitize=address)
+        endforeach()
     else()
-        target_compile_options(devclean_core PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer)
-        target_link_options(devclean_core PRIVATE -fsanitize=address,undefined)
+        foreach(target devclean_core devclean devclean_tests devclean_benchmark)
+            target_compile_options(${target} PRIVATE
+                -fsanitize=address,undefined
+                -fno-omit-frame-pointer
+            )
+            target_link_options(${target} PRIVATE
+                -fsanitize=address,undefined
+            )
+        endforeach()
     endif()
 endif()
 

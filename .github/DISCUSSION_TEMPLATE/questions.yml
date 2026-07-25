@@ -1,0 +1,7 @@
+title: Q&A
+labels:
+  - discussion
+body:
+  - type: markdown
+    attributes:
+      value: Ask usage, architecture, packaging, or contribution questions here.

@@ -13,7 +13,7 @@ struct AppConfig
     std::string defaultColor = "none";
     std::string defaultSort = "name";
     std::string defaultCategory;
-    std::string version = "1.1";
+    std::string version = "1.0.1";
     std::vector<CacheDefinition> customCaches;
 };
 

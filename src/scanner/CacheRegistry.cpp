@@ -157,25 +157,3 @@ std::vector<CacheDefinition> CacheRegistry::getMatchingCaches(
     return matched;
 }
 
-std::vector<CacheDefinition> CacheRegistry::customCaches;
-
-std::vector<CacheDefinition> CacheRegistry::getCachesWithPlugins()
-{
-    auto caches = getCaches();
-
-    for (const auto& custom : customCaches) {
-        caches.push_back(custom);
-    }
-
-    return caches;
-}
-
-void CacheRegistry::addCustomCache(const CacheDefinition& cache)
-{
-    customCaches.push_back(cache);
-}
-
-std::vector<CacheDefinition> CacheRegistry::getCustomCaches()
-{
-    return customCaches;
-}

@@ -1,4 +1,5 @@
 #include "scanner/PluginLoader.hpp"
+#include "platform/Filesystem.hpp"
 
 #include <cstdlib>
 #include <fstream>
@@ -6,6 +7,36 @@
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
+
+namespace {
+
+bool isValidPluginName(const std::string& value)
+{
+    if (value.empty())
+        return false;
+
+    return std::all_of(value.begin(), value.end(), [](unsigned char c) {
+        return std::isalnum(c) || c == '-' || c == '_' || c == '.';
+    });
+}
+
+bool isValidPluginPath(const std::filesystem::path& path)
+{
+    if (path.empty())
+        return false;
+    if (!path.is_absolute())
+        return false;
+    if (Filesystem::isProtectedPath(path))
+        return false;
+    for (const auto& part : path)
+    {
+        if (part == "..")
+            return false;
+    }
+    return true;
+}
+
+} // namespace
 
 PluginLoader& PluginLoader::getInstance()
 {
@@ -143,19 +174,23 @@ CacheDefinition PluginLoader::parsePluginJson(
 
 bool PluginLoader::validatePluginDefinition(const CacheDefinition& cache)
 {
-    if (cache.name.empty()) {
+    if (!isValidPluginName(cache.name)) {
         return false;
     }
 
 #ifdef _WIN32
-    if (cache.windowsPath.empty()) {
+    if (!isValidPluginPath(cache.windowsPath)) {
         return false;
     }
 #else
-    if (cache.linuxPath.empty()) {
+    if (!isValidPluginPath(cache.linuxPath)) {
         return false;
     }
 #endif
+
+    if (!std::all_of(cache.cachePaths.begin(), cache.cachePaths.end(), isValidPluginPath)) {
+        return false;
+    }
 
     return true;
 }

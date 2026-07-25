@@ -203,13 +203,16 @@ int CleanCommand::execute(const ParsedArgs& args)
     {
         if (args.verbose)
             std::cout << "Deleting... " << candidate.name << '\n';
-        if (cleaner.removeDirectory(candidate.location))
+        const auto cleanResult = cleaner.removeDirectory(candidate.location);
+        if (cleanResult.success)
         {
             std::cout << "[OK]   " << candidate.name << '\n';
         }
         else
         {
             std::cout << "[SKIP] " << candidate.name << '\n';
+            if (!cleanResult.error.empty())
+                std::cout << "       " << cleanResult.error << '\n';
             if (exitCode == 0)
                 exitCode = 1;
         }

@@ -136,7 +136,3 @@ std::unordered_set<std::string> ToolDetector::detectInstalledTools()
     return installed;
 }
 
-bool ToolDetector::checkToolInstalled(const std::string& toolName)
-{
-    return isInstalled(toolName);
-}

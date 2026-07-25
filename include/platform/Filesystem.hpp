@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <map>
 #include <string>
 
 class Filesystem
@@ -14,14 +15,18 @@ public:
         uint64_t bytes = 0;
         uint64_t files = 0;
         uint64_t directories = 0;
+        uint64_t brokenSymlinks = 0;
+        std::map<std::string, uint64_t> fileTypeBytes;
         std::string error;
     };
 
     static bool exists(const std::filesystem::path& path);
     static DirectorySummary inspectDirectory(const std::filesystem::path& path);
     static uint64_t directorySize(const std::filesystem::path& path);
-    static bool removeDirectory(const std::filesystem::path& path);
+    static bool removeDirectory(const std::filesystem::path& path, std::string* error = nullptr);
     static std::filesystem::file_time_type lastModified(const std::filesystem::path& path);
     static uint64_t fileCount(const std::filesystem::path& path);
     static uint64_t directoryCount(const std::filesystem::path& path);
+    static std::filesystem::path weaklyCanonical(const std::filesystem::path& path);
+    static bool isProtectedPath(const std::filesystem::path& path);
 };

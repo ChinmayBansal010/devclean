@@ -47,7 +47,7 @@ int main()
 
     CleanEngine cleaner;
     const auto deleteStart = std::chrono::steady_clock::now();
-    const bool deleted = cleaner.removeDirectory(tempDir);
+    const auto cleanResult = cleaner.removeDirectory(tempDir);
     const auto deleteEnd = std::chrono::steady_clock::now();
 
     const auto scanMs = std::chrono::duration_cast<std::chrono::milliseconds>(scanEnd - scanStart).count();
@@ -58,9 +58,9 @@ int main()
     std::cout << "scan_time_ms=" << scanMs << '\n';
     std::cout << "scan_results=" << results.size() << '\n';
     std::cout << "delete_time_ms=" << deleteMs << '\n';
-    std::cout << "delete_success=" << (deleted ? 1 : 0) << '\n';
+    std::cout << "delete_success=" << (cleanResult.success ? 1 : 0) << '\n';
     std::cout << "memory_bytes=" << memoryBytes << '\n';
     std::cout << "hardware_threads=" << std::thread::hardware_concurrency() << '\n';
 
-    return deleted ? 0 : 1;
+    return cleanResult.success ? 0 : 1;
 }

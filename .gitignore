@@ -2,6 +2,8 @@
 build/
 build-*/
 cmake-build-*/
+_CPack_Packages/
+cpack-output/
 
 # CMake
 CMakeCache.txt
@@ -52,3 +54,19 @@ devclean.exe
 # Temporary files
 *.tmp
 *.bak
+
+# Task progress tracking
+task_progress.md
+
+# Release artifacts
+release-artifacts/
+release-manifest.txt
+
+# Generated packages
+*.deb
+*.rpm
+*.tar.gz
+*.zip
+!devclean-0.1.0-Linux.deb
+!devclean-0.1.0-Linux.rpm
+!devclean-0.1.0-Linux.tar.gz

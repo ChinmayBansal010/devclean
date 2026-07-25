@@ -24,7 +24,6 @@ private:
     ToolDetector(const ToolDetector&) = delete;
     ToolDetector& operator=(const ToolDetector&) = delete;
 
-    bool checkToolInstalled(const std::string& toolName);
     std::unordered_set<std::string> detectedTools;
     bool initialized = false;
 };

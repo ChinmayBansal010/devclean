@@ -1,6 +1,8 @@
 #include "core/Config.hpp"
+#include "platform/Filesystem.hpp"
 
 #include <algorithm>
+#include <cctype>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -65,6 +67,42 @@ std::vector<std::filesystem::path> readPathArray(const json& source, const std::
     return values;
 }
 
+bool isValidCacheName(const std::string& value)
+{
+    if (value.empty())
+        return false;
+
+    return std::all_of(value.begin(), value.end(), [](unsigned char c) {
+        return std::isalnum(c) || c == '-' || c == '_' || c == '.';
+    });
+}
+
+bool isSafeCustomCache(const CacheDefinition& cache)
+{
+    if (!isValidCacheName(cache.name))
+        return false;
+
+    const auto validatePath = [](const std::filesystem::path& path) {
+        if (path.empty())
+            return true;
+        if (!path.is_absolute())
+            return false;
+        if (Filesystem::isProtectedPath(path))
+            return false;
+        for (const auto& part : path)
+        {
+            if (part == "..")
+                return false;
+        }
+        return true;
+    };
+
+    if (!validatePath(cache.linuxPath) || !validatePath(cache.windowsPath))
+        return false;
+
+    return std::all_of(cache.cachePaths.begin(), cache.cachePaths.end(), validatePath);
+}
+
 void migrateLegacyConfig(json& root)
 {
     if (!root.contains("disabledCaches") && root.contains("disabled") && root["disabled"].is_array())
@@ -83,7 +121,7 @@ void migrateLegacyConfig(json& root)
         root["schemaVersion"] = 3;
 
     if (!root.contains("version"))
-        root["version"] = "3.0";
+        root["version"] = "1.0.0";
 }
 
 bool validateConfig(AppConfig& config)
@@ -105,10 +143,14 @@ bool validateConfig(AppConfig& config)
         config.defaultSort = "name";
 
     if (config.version.empty())
-        config.version = "3.0";
+        config.version = "1.0.0";
 
     if (config.schemaVersion <= 0)
         config.schemaVersion = 3;
+
+    config.customCaches.erase(std::remove_if(config.customCaches.begin(), config.customCaches.end(), [](const CacheDefinition& cache) {
+        return !isSafeCustomCache(cache);
+    }), config.customCaches.end());
 
     return true;
 }
@@ -171,7 +213,7 @@ AppConfig ConfigLoader::load()
         config.defaultColor = j.value("defaultColor", "none");
         config.defaultSort = j.value("defaultSort", j.value("default_sort", "name"));
         config.defaultCategory = j.value("defaultCategory", j.value("default_category", ""));
-        config.version = j.value("version", "3.0");
+        config.version = j.value("version", "1.0.0");
 
         if (j.contains("customCaches") && j["customCaches"].is_array()) {
             for (const auto& customJson : j["customCaches"]) {
@@ -211,7 +253,8 @@ AppConfig ConfigLoader::load()
                 }
 #endif
 
-                config.customCaches.push_back(cache);
+                if (isSafeCustomCache(cache))
+                    config.customCaches.push_back(cache);
             }
         }
 

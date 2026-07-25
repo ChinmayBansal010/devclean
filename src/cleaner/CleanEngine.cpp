@@ -6,7 +6,9 @@
 
 namespace fs = std::filesystem;
 
-bool CleanEngine::removeDirectory(const fs::path& path)
+CleanResult CleanEngine::removeDirectory(const fs::path& path)
 {
-    return Filesystem::removeDirectory(path);
+    CleanResult result;
+    result.success = Filesystem::removeDirectory(path, &result.error);
+    return result;
 }

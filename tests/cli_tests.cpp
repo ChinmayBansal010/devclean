@@ -1,5 +1,7 @@
+#include "cleaner/CleanEngine.hpp"
 #include "core/ArgumentParser.hpp"
 #include "core/Config.hpp"
+#include "platform/Filesystem.hpp"
 #include "scanner/CacheRegistry.hpp"
 #include "scanner/PluginLoader.hpp"
 
@@ -20,6 +22,16 @@ void setEnvVar(const char* name, const std::string& value)
 #else
     setenv(name, value.c_str(), 1);
 #endif
+}
+
+std::string getHomeEnv()
+{
+#ifdef _WIN32
+    const char* home = std::getenv("USERPROFILE");
+#else
+    const char* home = std::getenv("HOME");
+#endif
+    return home == nullptr ? std::string() : std::string(home);
 }
 
 } // namespace
@@ -136,6 +148,31 @@ int main()
     assert(std::any_of(loadedPlugins.begin(), loadedPlugins.end(), [](const CacheDefinition& cache) {
         return cache.name == "plugin-cache" && !cache.cachePaths.empty();
     }));
+
+    std::ofstream invalidPluginFile(tempRoot / ".config" / "devclean" / "plugins" / "invalid-plugin.json");
+    invalidPluginFile << R"({"name":"invalid/plugin","category":"build","path":"../escape"})";
+    invalidPluginFile.close();
+    const auto loadedAfterInvalid = PluginLoader::getInstance().loadPlugins();
+    assert(std::none_of(loadedAfterInvalid.begin(), loadedAfterInvalid.end(), [](const CacheDefinition& cache) {
+        return cache.name == "invalid/plugin";
+    }));
+
+    assert(!Filesystem::isProtectedPath(tempRoot / "custom-cache"));
+    const std::string homePath = getHomeEnv();
+    if (!homePath.empty())
+        assert(Filesystem::isProtectedPath(homePath));
+
+    CleanEngine cleaner;
+    const auto protectedRemoval = cleaner.removeDirectory(homePath.empty() ? std::filesystem::path("/") : std::filesystem::path(homePath));
+    assert(!protectedRemoval.success);
+    assert(!protectedRemoval.error.empty());
+
+    const auto safeCacheDir = tempRoot / "safe-cache";
+    std::filesystem::create_directories(safeCacheDir / "nested");
+    std::ofstream(safeCacheDir / "nested" / "artifact.txt") << "cache";
+    const auto removed = cleaner.removeDirectory(safeCacheDir);
+    assert(removed.success);
+    assert(!std::filesystem::exists(safeCacheDir));
 
     std::cout << "devclean CLI tests passed" << std::endl;
     return 0;

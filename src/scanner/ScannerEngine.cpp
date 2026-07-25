@@ -1,5 +1,6 @@
 #include "scanner/ScannerEngine.hpp"
 
+#include "core/Application.hpp"
 #include "core/ScanHistory.hpp"
 #include "platform/Filesystem.hpp"
 #include "platform/ToolDetector.hpp"
@@ -9,7 +10,6 @@
 #include <algorithm>
 #include <cctype>
 #include <exception>
-#include <map>
 #include <string>
 #include <utility>
 #include <vector>
@@ -41,18 +41,6 @@ bool matchesQuery(const ScanResult& result, const std::string& query)
     }
 
     return false;
-}
-
-std::string normalizeCategory(const std::string& value)
-{
-    std::string normalized = normalize(value);
-    if (normalized == "node")
-        return "javascript";
-    if (normalized == "package-managers" || normalized == "package managers")
-        return "package managers";
-    if (normalized == "cpp")
-        return "cpp";
-    return normalized;
 }
 
 std::filesystem::path pickPath(const CacheDefinition& cache)
@@ -96,36 +84,6 @@ std::vector<CacheDefinition> mergeCaches(const std::vector<CacheDefinition>& bas
     return merged;
 }
 
-std::map<std::string, uint64_t> collectFileTypes(const std::filesystem::path& root)
-{
-    std::map<std::string, uint64_t> fileTypes;
-    if (root.empty())
-        return fileTypes;
-
-    std::error_code ec;
-    for (std::filesystem::recursive_directory_iterator it(root, std::filesystem::directory_options::skip_permission_denied, ec), end;
-         it != end;
-         it.increment(ec))
-    {
-        if (ec)
-            break;
-
-        const auto& entry = *it;
-        std::error_code entryEc;
-        if (!entry.is_regular_file(entryEc) || entryEc)
-            continue;
-
-        const auto ext = entry.path().extension().string();
-        std::error_code sizeEc;
-        const auto fileSize = entry.file_size(sizeEc);
-        if (sizeEc)
-            continue;
-
-        fileTypes[ext.empty() ? "<no extension>" : normalize(ext)] += fileSize;
-    }
-    return fileTypes;
-}
-
 std::chrono::seconds computeAge(const std::filesystem::file_time_type& modified)
 {
     if (modified == std::filesystem::file_time_type{})
@@ -151,6 +109,9 @@ std::vector<ScanResult> ScannerEngine::scan(const std::vector<std::string>& filt
 
     for (const auto& cache : caches)
     {
+        if (Application::isInterrupted())
+            break;
+
         const auto path = pickPath(cache);
 
         ScanResult result;
@@ -195,7 +156,7 @@ std::vector<ScanResult> ScannerEngine::scan(const std::vector<std::string>& filt
         result.directories = summary.directories;
         result.modified = Filesystem::lastModified(path);
         result.age = computeAge(result.modified);
-        result.fileTypeBytes = collectFileTypes(path);
+        result.fileTypeBytes = summary.fileTypeBytes;
         if (!summary.success)
         {
             result.found = false;

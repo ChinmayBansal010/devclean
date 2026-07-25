@@ -21,6 +21,9 @@ void setEnvVar(const char* name, const std::string& value)
 {
 #ifdef _WIN32
     _putenv_s(name, value.c_str());
+
+    if (std::string(name) == "HOME")
+        _putenv_s("USERPROFILE", value.c_str());
 #else
     setenv(name, value.c_str(), 1);
 #endif
@@ -116,6 +119,10 @@ int main()
         std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     setEnvVar("HOME", tempRoot.string());
 
+    #ifdef _WIN32
+    setEnvVar("USERPROFILE", tempRoot.string());
+    #endif
+
     std::filesystem::create_directories(
     tempRoot / ".config" / "devclean" / "plugins");
 
@@ -196,6 +203,13 @@ int main()
     if (!homePath.empty())
         assert(Filesystem::isProtectedPath(homePath));
 
+    std::cout << "HOME = " << std::getenv("HOME") << std::endl;
+
+    #ifdef _WIN32
+    std::cout << "USERPROFILE = " << std::getenv("USERPROFILE") << std::endl;
+    #endif
+
+    std::cout << "homePath = " << homePath << std::endl;
     CleanEngine cleaner;
     const auto protectedRemoval = cleaner.removeDirectory(homePath.empty() ? std::filesystem::path("/") : std::filesystem::path(homePath));
     assert(!protectedRemoval.success);

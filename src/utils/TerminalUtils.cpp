@@ -75,8 +75,6 @@ std::string TerminalUtils::icon(const std::string& name)
 ProgressBar::ProgressBar(uint64_t total, std::string_view label)
     : total(total), label(label), startTime(std::chrono::steady_clock::now())
 {
-    if (total == 0)
-        total = 1;
 }
 
 ProgressBar::~ProgressBar() { }

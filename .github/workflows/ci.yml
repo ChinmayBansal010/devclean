@@ -240,8 +240,8 @@ jobs:
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
       with:
+        body_path: CHANGELOG.md
         files: |
           release-artifacts/*
           release-manifest.txt
         fail_on_unmatched_files: false
-        generate_release_notes: true

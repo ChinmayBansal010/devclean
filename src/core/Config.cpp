@@ -67,6 +67,13 @@ std::vector<std::filesystem::path> readPathArray(const json& source, const std::
     return values;
 }
 
+std::filesystem::path normalizePath(const std::filesystem::path& path)
+{
+    if (path.empty())
+        return {};
+    return path.lexically_normal();
+}
+
 bool isValidCacheName(const std::string& value)
 {
     if (value.empty())
@@ -237,19 +244,19 @@ AppConfig ConfigLoader::load()
                 for (const auto& support : readStringArray(customJson, "osSupport"))
                     cache.osSupport.push_back(support);
                 for (const auto& path : readPathArray(customJson, "cachePaths"))
-                    cache.cachePaths.push_back(path);
+                    cache.cachePaths.push_back(normalizePath(path));
 
 #ifdef _WIN32
                 if (customJson.contains("windowsPath") && customJson["windowsPath"].is_string()) {
-                    cache.windowsPath = std::filesystem::path(customJson["windowsPath"].get<std::string>());
+                    cache.windowsPath = normalizePath(std::filesystem::path(customJson["windowsPath"].get<std::string>()));
                 } else if (customJson.contains("path") && customJson["path"].is_string()) {
-                    cache.windowsPath = std::filesystem::path(customJson["path"].get<std::string>());
+                    cache.windowsPath = normalizePath(std::filesystem::path(customJson["path"].get<std::string>()));
                 }
 #else
                 if (customJson.contains("linuxPath") && customJson["linuxPath"].is_string()) {
-                    cache.linuxPath = std::filesystem::path(customJson["linuxPath"].get<std::string>());
+                    cache.linuxPath = normalizePath(std::filesystem::path(customJson["linuxPath"].get<std::string>()));
                 } else if (customJson.contains("path") && customJson["path"].is_string()) {
-                    cache.linuxPath = std::filesystem::path(customJson["path"].get<std::string>());
+                    cache.linuxPath = normalizePath(std::filesystem::path(customJson["path"].get<std::string>()));
                 }
 #endif
 

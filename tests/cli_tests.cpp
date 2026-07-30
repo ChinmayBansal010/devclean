@@ -160,7 +160,7 @@ int main()
     #else
     customCache.linuxPath = tempRoot / "custom-cache";
     #endif
-    customCache.cachePaths = {tempRoot / "custom-cache" / "alt"};
+    customCache.cachePaths = {tempRoot / "custom-cache" / "." / "alt"};
     customConfig.customCaches.push_back(customCache);
     ConfigLoader::save(customConfig);
 
@@ -172,6 +172,7 @@ int main()
     assert(reloadedConfig.customCaches[0].osSupport.size() == 2);
     assert(reloadedConfig.customCaches[0].aliases[0] == "custom");
     assert(!reloadedConfig.customCaches[0].cachePaths.empty());
+    assert(reloadedConfig.customCaches[0].cachePaths[0] == (tempRoot / "custom-cache" / "alt"));
 
     const auto pluginJson = pluginDir / "custom-plugin.json";
 
@@ -179,7 +180,7 @@ int main()
     assert(pluginFile.is_open());
 
     const auto pluginPath = tempRoot / "plugin-cache";
-    const auto pluginAlt = pluginPath / "alt";
+    const auto pluginAlt = pluginPath / "." / "alt";
         auto escapeJson = [](std::string s) {
         size_t pos = 0;
         while ((pos = s.find('\\', pos)) != std::string::npos) {
@@ -234,6 +235,9 @@ int main()
     }));
     assert(std::any_of(loadedPlugins.begin(), loadedPlugins.end(), [](const CacheDefinition& cache) {
         return cache.name == "plugin-cache" && !cache.cachePaths.empty();
+    }));
+    assert(std::any_of(loadedPlugins.begin(), loadedPlugins.end(), [&](const CacheDefinition& cache) {
+        return cache.name == "plugin-cache" && !cache.cachePaths.empty() && cache.cachePaths[0] == (pluginPath / "alt");
     }));
 
     std::ofstream invalidPluginFile(pluginDir / "invalid-plugin.json");

@@ -36,6 +36,13 @@ bool isValidPluginPath(const std::filesystem::path& path)
     return true;
 }
 
+std::filesystem::path normalizePath(const std::filesystem::path& path)
+{
+    if (path.empty())
+        return {};
+    return path.lexically_normal();
+}
+
 } // namespace
 
 PluginLoader& PluginLoader::getInstance()
@@ -144,7 +151,7 @@ CacheDefinition PluginLoader::parsePluginJson(
     if (j.contains("cachePaths") && j["cachePaths"].is_array()) {
         for (const auto& path : j["cachePaths"]) {
             if (path.is_string()) {
-                cache.cachePaths.emplace_back(path.get<std::string>());
+                cache.cachePaths.emplace_back(normalizePath(std::filesystem::path(path.get<std::string>())));
             }
         }
     }
@@ -152,20 +159,20 @@ CacheDefinition PluginLoader::parsePluginJson(
 #ifdef _WIN32
     if (j.contains("windowsPath")) {
         cache.windowsPath =
-            std::filesystem::path(j["windowsPath"].get<std::string>());
+            normalizePath(std::filesystem::path(j["windowsPath"].get<std::string>()));
     }
     if (j.contains("path")) {
         cache.windowsPath =
-            std::filesystem::path(j["path"].get<std::string>());
+            normalizePath(std::filesystem::path(j["path"].get<std::string>()));
     }
 #else
     if (j.contains("linuxPath")) {
         cache.linuxPath =
-            std::filesystem::path(j["linuxPath"].get<std::string>());
+            normalizePath(std::filesystem::path(j["linuxPath"].get<std::string>()));
     }
     if (j.contains("path")) {
         cache.linuxPath =
-            std::filesystem::path(j["path"].get<std::string>());
+            normalizePath(std::filesystem::path(j["path"].get<std::string>()));
     }
 #endif
 

@@ -2,6 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 #include "cleaner/CleanEngine.hpp"
+#include "commands/ScanCommand.hpp"
 #include "core/ArgumentParser.hpp"
 #include "core/Config.hpp"
 #include "platform/Filesystem.hpp"
@@ -17,6 +18,7 @@
 #include <vector>
 #include <algorithm>
 #include <chrono>
+#include <sstream>
 
 namespace {
 
@@ -173,6 +175,16 @@ int main()
     assert(reloadedConfig.customCaches[0].aliases[0] == "custom");
     assert(!reloadedConfig.customCaches[0].cachePaths.empty());
     assert(reloadedConfig.customCaches[0].cachePaths[0] == (tempRoot / "custom-cache" / "alt"));
+
+    ScanCommand scanCommand;
+    ParsedArgs scanArgs;
+    scanArgs.command = "scan";
+    scanArgs.targets = {"custom-cache"};
+    std::ostringstream scanOutput;
+    auto* originalBuffer = std::cout.rdbuf(scanOutput.rdbuf());
+    scanCommand.execute(scanArgs);
+    std::cout.rdbuf(originalBuffer);
+    assert(scanOutput.str().find((tempRoot / "custom-cache").string()) != std::string::npos);
 
     const auto pluginJson = pluginDir / "custom-plugin.json";
 

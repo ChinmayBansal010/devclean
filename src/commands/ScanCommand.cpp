@@ -166,7 +166,8 @@ int ScanCommand::execute(const ParsedArgs& args)
     std::cout << std::setw(8) << "Files";
     std::cout << std::setw(12) << "Dirs";
     std::cout << std::setw(18) << "Modified";
-    std::cout << std::setw(12) << "Category" << '\n';
+    std::cout << std::setw(12) << "Category";
+    std::cout << std::setw(18) << "Path" << '\n';
 
     for (const auto& result : filtered)
     {
@@ -175,7 +176,8 @@ int ScanCommand::execute(const ParsedArgs& args)
         std::cout << std::setw(8) << result.files;
         std::cout << std::setw(12) << result.directories;
         std::cout << std::setw(18) << (result.found ? "present" : "missing");
-        std::cout << std::setw(12) << (result.category.empty() ? "misc" : result.category) << '\n';
+        std::cout << std::setw(12) << (result.category.empty() ? "misc" : result.category);
+        std::cout << std::setw(18) << result.location.string() << '\n';
     }
 
     std::cout << "----------------------------------------\n";

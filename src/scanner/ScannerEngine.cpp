@@ -127,6 +127,7 @@ std::vector<ScanResult> ScannerEngine::scan(const std::vector<std::string>& filt
                 return ToolDetector::getInstance().isInstalled(alias);
             });
         }
+        result.warnings = ToolDetector::getInstance().getWarningsForCache(cache.name);
 
         const std::string normalizedName = normalize(result.name);
         if (std::any_of(config.disabledCaches.begin(), config.disabledCaches.end(), [&](const std::string& disabled) {

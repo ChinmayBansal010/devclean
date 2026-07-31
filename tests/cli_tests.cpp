@@ -180,11 +180,12 @@ int main()
     ParsedArgs scanArgs;
     scanArgs.command = "scan";
     scanArgs.targets = {"custom-cache"};
+    scanArgs.json = true;
     std::ostringstream scanOutput;
     auto* originalBuffer = std::cout.rdbuf(scanOutput.rdbuf());
     scanCommand.execute(scanArgs);
     std::cout.rdbuf(originalBuffer);
-    assert(scanOutput.str().find((tempRoot / "custom-cache").string()) != std::string::npos);
+    assert(scanOutput.str().find("\"warnings\": []") != std::string::npos);
 
     const auto pluginJson = pluginDir / "custom-plugin.json";
 

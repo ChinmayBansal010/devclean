@@ -151,6 +151,7 @@ int ScanCommand::execute(const ParsedArgs& args)
             entry["files"] = result.files;
             entry["directories"] = result.directories;
             entry["error"] = result.error;
+            entry["warnings"] = result.warnings;
             caches.push_back(std::move(entry));
         }
 
@@ -167,6 +168,7 @@ int ScanCommand::execute(const ParsedArgs& args)
     std::cout << std::setw(12) << "Dirs";
     std::cout << std::setw(18) << "Modified";
     std::cout << std::setw(12) << "Category";
+    std::cout << std::setw(10) << "Warn";
     std::cout << std::setw(18) << "Path" << '\n';
 
     for (const auto& result : filtered)
@@ -177,6 +179,7 @@ int ScanCommand::execute(const ParsedArgs& args)
         std::cout << std::setw(12) << result.directories;
         std::cout << std::setw(18) << (result.found ? "present" : "missing");
         std::cout << std::setw(12) << (result.category.empty() ? "misc" : result.category);
+        std::cout << std::setw(10) << result.warnings.size();
         std::cout << std::setw(18) << result.location.string() << '\n';
     }
 

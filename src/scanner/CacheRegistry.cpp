@@ -31,6 +31,15 @@ bool matchesFilter(const CacheDefinition& cache, const std::string& filter)
     return false;
 }
 
+std::filesystem::path defaultCacheRoot(const std::filesystem::path& homePath)
+{
+#ifdef __APPLE__
+    return homePath / "Library" / "Caches";
+#else
+    return homePath / ".cache";
+#endif
+}
+
 } // namespace
 
 std::vector<CacheDefinition> CacheRegistry::getCaches()
@@ -92,12 +101,13 @@ std::vector<CacheDefinition> CacheRegistry::getCaches()
     caches.push_back({"scoop", {"scoop", "package managers"}, {}, userProfilePath / "scoop" / "cache", "package managers", "Scoop cache", {"SCOOP"}, {"windows"}, 6});
     caches.push_back({"homebrew", {"homebrew", "package managers"}, {}, userProfilePath / "Library" / "Caches" / "Homebrew", "package managers", "Homebrew cache", {"HOMEBREW_CACHE"}, {"macos"}, 6});
 #else
-    caches.push_back({"pip", {"pip", "python"}, homePath / ".cache" / "pip", {}, "python", "Python package cache", {"PIP_CACHE_DIR"}, {"windows", "linux", "macos"}, 10});
-    caches.push_back({"pipenv", {"pipenv", "python"}, homePath / ".cache" / "pipenv", {}, "python", "Pipenv cache", {"PIPENV_CACHE_DIR"}, {"windows", "linux", "macos"}, 10});
-    caches.push_back({"poetry", {"poetry", "python"}, homePath / ".cache" / "pypoetry", {}, "python", "Poetry cache", {"POETRY_CACHE_DIR"}, {"windows", "linux", "macos"}, 10});
-    caches.push_back({"uv", {"uv", "python"}, homePath / ".cache" / "uv", {}, "python", "uv cache", {"UV_CACHE_DIR"}, {"windows", "linux", "macos"}, 10});
-    caches.push_back({"pixi", {"pixi", "python"}, homePath / ".cache" / "pixi", {}, "python", "Pixi package cache", {"PIXI_CACHE_DIR"}, {"windows", "linux", "macos"}, 10});
-    caches.push_back({"mamba", {"mamba", "python"}, homePath / ".cache" / "mamba", {}, "python", "Mamba package cache", {"CONDA_PKGS_DIRS"}, {"windows", "linux", "macos"}, 10});
+    const auto cacheRoot = defaultCacheRoot(homePath);
+    caches.push_back({"pip", {"pip", "python"}, cacheRoot / "pip", {}, "python", "Python package cache", {"PIP_CACHE_DIR"}, {"windows", "linux", "macos"}, 10});
+    caches.push_back({"pipenv", {"pipenv", "python"}, cacheRoot / "pipenv", {}, "python", "Pipenv cache", {"PIPENV_CACHE_DIR"}, {"windows", "linux", "macos"}, 10});
+    caches.push_back({"poetry", {"poetry", "python"}, cacheRoot / "pypoetry", {}, "python", "Poetry cache", {"POETRY_CACHE_DIR"}, {"windows", "linux", "macos"}, 10});
+    caches.push_back({"uv", {"uv", "python"}, cacheRoot / "uv", {}, "python", "uv cache", {"UV_CACHE_DIR"}, {"windows", "linux", "macos"}, 10});
+    caches.push_back({"pixi", {"pixi", "python"}, cacheRoot / "pixi", {}, "python", "Pixi package cache", {"PIXI_CACHE_DIR"}, {"windows", "linux", "macos"}, 10});
+    caches.push_back({"mamba", {"mamba", "python"}, cacheRoot / "mamba", {}, "python", "Mamba package cache", {"CONDA_PKGS_DIRS"}, {"windows", "linux", "macos"}, 10});
     caches.push_back({"npm", {"npm", "javascript", "node"}, homePath / ".npm", {}, "javascript", "Node package cache", {"npm_config_cache"}, {"windows", "linux", "macos"}, 10});
     caches.push_back({"pnpm", {"pnpm", "javascript", "node"}, homePath / ".pnpm-store", {}, "javascript", "pnpm store", {"PNPM_HOME"}, {"windows", "linux", "macos"}, 10});
     caches.push_back({"yarn", {"yarn", "javascript", "node"}, homePath / ".cache" / "yarn", {}, "javascript", "Yarn cache", {"YARN_CACHE_FOLDER"}, {"windows", "linux", "macos"}, 10});
@@ -107,21 +117,21 @@ std::vector<CacheDefinition> CacheRegistry::getCaches()
     caches.push_back({"rustup", {"rustup", "rust"}, homePath / ".rustup", {}, "rust", "Rust toolchain cache", {"RUSTUP_HOME"}, {"windows", "linux", "macos"}, 8});
     caches.push_back({"gradle", {"gradle", "java"}, homePath / ".gradle" / "caches", {}, "java", "Gradle caches", {"GRADLE_USER_HOME"}, {"windows", "linux", "macos"}, 10});
     caches.push_back({"maven", {"maven", "java"}, homePath / ".m2" / "repository", {}, "java", "Maven repository cache", {"M2_REPO"}, {"windows", "linux", "macos"}, 10});
-    caches.push_back({"ccache", {"ccache", "build"}, homePath / ".cache" / "ccache", {}, "build", "Ccache build cache", {"CCACHE_DIR"}, {"windows", "linux", "macos"}, 10});
+    caches.push_back({"ccache", {"ccache", "build"}, cacheRoot / "ccache", {}, "build", "Ccache build cache", {"CCACHE_DIR"}, {"windows", "linux", "macos"}, 10});
     caches.push_back({"conan", {"conan", "cpp"}, homePath / ".conan" / "p", {}, "cpp", "Conan package cache", {"CONAN_USER_HOME"}, {"windows", "linux", "macos"}, 8});
-    caches.push_back({"vcpkg", {"vcpkg", "cpp"}, homePath / ".cache" / "vcpkg", {}, "cpp", "vcpkg downloads cache", {"VCPKG_ROOT"}, {"windows", "linux", "macos"}, 8});
-    caches.push_back({"docker-builder", {"docker", "builder", "containers"}, homePath / ".cache" / "docker" / "builder", {}, "containers", "Docker builder cache", {"DOCKER_BUILDKIT"}, {"windows", "linux", "macos"}, 8});
+    caches.push_back({"vcpkg", {"vcpkg", "cpp"}, cacheRoot / "vcpkg", {}, "cpp", "vcpkg downloads cache", {"VCPKG_ROOT"}, {"windows", "linux", "macos"}, 8});
+    caches.push_back({"docker-builder", {"docker", "builder", "containers"}, cacheRoot / "docker" / "builder", {}, "containers", "Docker builder cache", {"DOCKER_BUILDKIT"}, {"windows", "linux", "macos"}, 8});
     caches.push_back({"docker-volumes", {"docker", "volumes", "containers"}, homePath / ".local" / "share" / "docker" / "volumes", {}, "containers", "Docker volumes cache", {"DOCKER_HOST"}, {"windows", "linux", "macos"}, 8});
     caches.push_back({"podman", {"podman", "containers"}, homePath / ".local" / "share" / "containers", {}, "containers", "Podman container storage", {"PODMAN_USERNS"}, {"windows", "linux", "macos"}, 8});
-    caches.push_back({"vscode", {"vscode", "editor", "code", "visual studio code"}, homePath / ".cache" / "Code", {}, "editor", "VS Code cache", {"VSCODE_PORTABLE"}, {"windows", "linux", "macos"}, 6});
-    caches.push_back({"jetbrains", {"jetbrains", "editor", "idea", "intellij", "clion", "pycharm", "goland"}, homePath / ".cache" / "JetBrains", {}, "editor", "JetBrains IDE cache", {"JETBRAINS_IDE"}, {"windows", "linux", "macos"}, 6});
-    caches.push_back({"cmake", {"cmake", "build"}, homePath / ".cache" / "cmake", {}, "build", "CMake build cache", {"CMAKE_BUILD_PARALLEL_LEVEL"}, {"windows", "linux", "macos"}, 7});
-    caches.push_back({"meson", {"meson", "build"}, homePath / ".cache" / "meson", {}, "build", "Meson build cache", {"MESON_DIR"}, {"windows", "linux", "macos"}, 7});
-    caches.push_back({"bazel", {"bazel", "build"}, homePath / ".cache" / "bazel", {}, "build", "Bazel cache", {"BAZELISK_HOME"}, {"windows", "linux", "macos"}, 7});
+    caches.push_back({"vscode", {"vscode", "editor", "code", "visual studio code"}, cacheRoot / "Code", {}, "editor", "VS Code cache", {"VSCODE_PORTABLE"}, {"windows", "linux", "macos"}, 6});
+    caches.push_back({"jetbrains", {"jetbrains", "editor", "idea", "intellij", "clion", "pycharm", "goland"}, cacheRoot / "JetBrains", {}, "editor", "JetBrains IDE cache", {"JETBRAINS_IDE"}, {"windows", "linux", "macos"}, 6});
+    caches.push_back({"cmake", {"cmake", "build"}, cacheRoot / "cmake", {}, "build", "CMake build cache", {"CMAKE_BUILD_PARALLEL_LEVEL"}, {"windows", "linux", "macos"}, 7});
+    caches.push_back({"meson", {"meson", "build"}, cacheRoot / "meson", {}, "build", "Meson build cache", {"MESON_DIR"}, {"windows", "linux", "macos"}, 7});
+    caches.push_back({"bazel", {"bazel", "build"}, cacheRoot / "bazel", {}, "build", "Bazel cache", {"BAZELISK_HOME"}, {"windows", "linux", "macos"}, 7});
     caches.push_back({"apt", {"apt", "package managers"}, homePath / ".cache" / "apt", {}, "package managers", "APT package cache", {"APT_CACHE_DIR"}, {"linux"}, 6});
     caches.push_back({"dnf", {"dnf", "package managers"}, homePath / ".cache" / "dnf", {}, "package managers", "DNF cache", {"DNF_CACHE_DIR"}, {"linux"}, 6});
     caches.push_back({"pacman", {"pacman", "package managers"}, homePath / ".cache" / "pacman", {}, "package managers", "Pacman cache", {"XDG_CACHE_HOME"}, {"linux"}, 6});
-    caches.push_back({"homebrew", {"homebrew", "package managers"}, homePath / ".cache" / "Homebrew", {}, "package managers", "Homebrew cache", {"HOMEBREW_CACHE"}, {"macos"}, 6});
+    caches.push_back({"homebrew", {"homebrew", "package managers"}, cacheRoot / "Homebrew", {}, "package managers", "Homebrew cache", {"HOMEBREW_CACHE"}, {"macos"}, 6});
 #endif
 
     return caches;
@@ -156,4 +166,3 @@ std::vector<CacheDefinition> CacheRegistry::getMatchingCaches(
 
     return matched;
 }
-

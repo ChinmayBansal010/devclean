@@ -186,16 +186,20 @@ int main()
     assert(!reloadedConfig.customCaches[0].cachePaths.empty());
     assert(reloadedConfig.customCaches[0].cachePaths[0] == (tempRoot / "custom-cache" / "alt"));
 
+    const auto pipEnvCache = tempRoot / "pip-env-cache";
+    std::filesystem::create_directories(pipEnvCache);
+    setEnvVar("PIP_CACHE_DIR", pipEnvCache.string());
+
     ScanCommand scanCommand;
     ParsedArgs scanArgs;
     scanArgs.command = "scan";
-    scanArgs.targets = {"custom-cache"};
+    scanArgs.targets = {"pip"};
     scanArgs.json = true;
     std::ostringstream scanOutput;
     auto* originalBuffer = std::cout.rdbuf(scanOutput.rdbuf());
     scanCommand.execute(scanArgs);
     std::cout.rdbuf(originalBuffer);
-    assert(scanOutput.str().find("\"warnings\": []") != std::string::npos);
+    assert(scanOutput.str().find(pipEnvCache.string()) != std::string::npos);
 
     const auto pluginJson = pluginDir / "custom-plugin.json";
 

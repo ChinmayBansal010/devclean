@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstdlib>
 #include <exception>
 #include <string>
 #include <utility>
@@ -43,8 +44,33 @@ bool matchesQuery(const ScanResult& result, const std::string& query)
     return false;
 }
 
-std::filesystem::path pickPath(const CacheDefinition& cache)
+std::filesystem::path expandUserPath(std::string value)
 {
+    if (value.empty())
+        return {};
+
+    if (value.size() > 1 && value[0] == '~' && (value[1] == '/' || value[1] == '\\'))
+    {
+        if (const char* home = std::getenv("HOME"))
+            value.replace(0, 1, home);
+    }
+
+    return std::filesystem::path(value).lexically_normal();
+}
+
+std::filesystem::path resolveConfiguredPath(const CacheDefinition& cache)
+{
+    for (const auto& envVar : cache.environmentVariables)
+    {
+        const char* rawValue = std::getenv(envVar.c_str());
+        if (rawValue == nullptr || *rawValue == '\0')
+            continue;
+
+        const auto candidate = expandUserPath(rawValue);
+        if (candidate.is_absolute())
+            return candidate;
+    }
+
 #ifdef _WIN32
     if (!cache.windowsPath.empty())
         return cache.windowsPath;
@@ -112,7 +138,7 @@ std::vector<ScanResult> ScannerEngine::scan(const std::vector<std::string>& filt
         if (Application::isInterrupted())
             break;
 
-        const auto path = pickPath(cache);
+        const auto path = resolveConfiguredPath(cache);
 
         ScanResult result;
         result.name = cache.name;

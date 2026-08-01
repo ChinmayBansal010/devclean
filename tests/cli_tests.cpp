@@ -75,7 +75,9 @@ int main()
         return cache.name == "pip";
     });
     assert(pipCache != pythonCaches.end());
-#ifdef __APPLE__
+#ifdef _WIN32
+    assert(pipCache->windowsPath == std::filesystem::path(getHomeEnv()) / "AppData" / "Local" / "pip" / "Cache");
+#elif defined(__APPLE__)
     assert(pipCache->linuxPath == std::filesystem::path(getHomeEnv()) / "Library" / "Caches" / "pip");
 #else
     assert(pipCache->linuxPath == std::filesystem::path(getHomeEnv()) / ".cache" / "pip");

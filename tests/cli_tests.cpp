@@ -201,6 +201,20 @@ int main()
     std::cout.rdbuf(originalBuffer);
     assert(scanOutput.str().find(pipEnvCache.string()) != std::string::npos);
 
+    const auto cargoHome = tempRoot / "cargo-home";
+    std::filesystem::create_directories(cargoHome / "registry");
+    setEnvVar("CARGO_HOME", cargoHome.string());
+
+    ParsedArgs cargoScanArgs;
+    cargoScanArgs.command = "scan";
+    cargoScanArgs.targets = {"cargo"};
+    cargoScanArgs.json = true;
+    std::ostringstream cargoScanOutput;
+    originalBuffer = std::cout.rdbuf(cargoScanOutput.rdbuf());
+    scanCommand.execute(cargoScanArgs);
+    std::cout.rdbuf(originalBuffer);
+    assert(cargoScanOutput.str().find((cargoHome / "registry").string()) != std::string::npos);
+
     const auto pluginJson = pluginDir / "custom-plugin.json";
 
     std::ofstream pluginFile(pluginJson);

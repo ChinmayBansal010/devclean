@@ -58,6 +58,24 @@ std::filesystem::path expandUserPath(std::string value)
     return std::filesystem::path(value).lexically_normal();
 }
 
+std::filesystem::path environmentPathSuffix(const std::string& envVar)
+{
+    if (envVar == "CARGO_HOME")
+        return "registry";
+    if (envVar == "RUSTUP_HOME")
+        return "toolchains";
+    if (envVar == "GRADLE_USER_HOME")
+        return "caches";
+    if (envVar == "CONAN_USER_HOME")
+        return "p";
+    if (envVar == "VCPKG_ROOT")
+        return "downloads";
+    if (envVar == "XDG_CACHE_HOME")
+        return "pacman";
+
+    return {};
+}
+
 std::filesystem::path resolveConfiguredPath(const CacheDefinition& cache)
 {
     for (const auto& envVar : cache.environmentVariables)
@@ -68,7 +86,10 @@ std::filesystem::path resolveConfiguredPath(const CacheDefinition& cache)
 
         const auto candidate = expandUserPath(rawValue);
         if (candidate.is_absolute())
-            return candidate;
+        {
+            const auto suffix = environmentPathSuffix(envVar);
+            return suffix.empty() ? candidate : candidate / suffix;
+        }
     }
 
 #ifdef _WIN32

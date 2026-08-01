@@ -71,6 +71,16 @@ int main()
         return cache.name == "pip";
     }));
 
+    const auto pipCache = std::find_if(pythonCaches.begin(), pythonCaches.end(), [](const CacheDefinition& cache) {
+        return cache.name == "pip";
+    });
+    assert(pipCache != pythonCaches.end());
+#ifdef __APPLE__
+    assert(pipCache->linuxPath == std::filesystem::path(getHomeEnv()) / "Library" / "Caches" / "pip");
+#else
+    assert(pipCache->linuxPath == std::filesystem::path(getHomeEnv()) / ".cache" / "pip");
+#endif
+
     const auto rustCaches = CacheRegistry::getMatchingCaches({"rust"});
     assert(!rustCaches.empty());
     assert(std::any_of(rustCaches.begin(), rustCaches.end(), [](const CacheDefinition& cache) {

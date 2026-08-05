@@ -13,15 +13,7 @@ include_directories(include)
 
 enable_testing()
 
-include(FetchContent)
-
-find_package(nlohmann_json CONFIG QUIET)
-if(NOT nlohmann_json_FOUND)
-    FetchContent_Declare(nlohmann_json
-        URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
-    )
-    FetchContent_MakeAvailable(nlohmann_json)
-endif()
+find_package(nlohmann_json CONFIG REQUIRED)
 
 add_library(devclean_core
     src/core/Application.cpp

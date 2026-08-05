@@ -22,6 +22,22 @@ cmake --build build -j2
 ./build/devclean scan
 ```
 
+### Using vcpkg
+
+This repository includes a local `vcpkg` checkout and a root `vcpkg.json` manifest. To build with vcpkg:
+
+```bash
+cd vcpkg
+./bootstrap-vcpkg.sh
+cd ..
+cmake -S . -B build \
+  -DCMAKE_TOOLCHAIN_FILE=$PWD/vcpkg/scripts/buildsystems/vcpkg.cmake \
+  -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+```
+
+When you build with the vcpkg toolchain, `nlohmann-json` is installed automatically from the manifest.
+
 ### Platform notes
 
 - Linux: requires `HOME` and scans cache roots under `~/.cache` by default.
@@ -33,8 +49,9 @@ cmake --build build -j2
 - CMake 3.20+
 - C++23 compiler
 - `nlohmann_json`
+- Optional: `vcpkg` for reproducible dependency management
 
-The build falls back to `FetchContent` when `nlohmann_json` is not preinstalled.
+The build falls back to `FetchContent` when `nlohmann_json` is not preinstalled, but vcpkg is the recommended way to install and manage C++ dependencies consistently across platforms.
 
 ### Optional package installs
 

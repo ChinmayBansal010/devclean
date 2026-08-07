@@ -185,7 +185,7 @@ AppConfig ConfigLoader::load()
 
     std::filesystem::path configPath = getConfigPath();
 
-    if (configPath.empty() || !std::filesystem::is_regular_file(configPath))
+    if (configPath.empty() || !std::filesystem::exists(configPath))
         return config;
 
     bool migrated = false;

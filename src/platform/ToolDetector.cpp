@@ -60,7 +60,7 @@ bool ToolDetector::isInstalled(const std::string& toolName)
         {
             std::filesystem::path candidate = std::filesystem::path(dir) / toolName;
 
-            if (std::filesystem::is_regular_file(candidate) &&
+            if (std::filesystem::exists(candidate) &&
                 access(candidate.c_str(), X_OK) == 0)
             {
                 return true;

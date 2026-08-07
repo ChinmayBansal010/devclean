@@ -72,7 +72,7 @@ std::vector<CacheDefinition> PluginLoader::loadPlugins()
     }
 #endif
 
-    if (!pluginDir.empty() && std::filesystem::is_regular_file(pluginDir)) {
+    if (!pluginDir.empty() && std::filesystem::is_directory(pluginDir)) {
         loadPluginsFromDirectory(pluginDir);
     }
 
@@ -82,7 +82,7 @@ std::vector<CacheDefinition> PluginLoader::loadPlugins()
 void PluginLoader::loadPluginsFromDirectory(
     const std::filesystem::path& pluginDir)
 {
-    if (!std::filesystem::is_regular_file(pluginDir)) {
+    if (!std::filesystem::is_directory(pluginDir)) {
         return;
     }
 
@@ -195,9 +195,10 @@ bool PluginLoader::validatePluginDefinition(const CacheDefinition& cache)
     }
 #endif
 
-    if (!std::all_of(cache.cachePaths.begin(), cache.cachePaths.end(), isValidPluginPath)) {
-        return false;
-    }
+    cache.cachePaths.erase(
+        std::remove_if(cache.cachePaths.begin(), cache.cachePaths.end(),
+                    [](const auto& p) { return !isValidPluginPath(p); }),
+        cache.cachePaths.end());
 
     return true;
 }

@@ -148,8 +148,33 @@ std::chrono::seconds computeAge(const std::filesystem::file_time_type& modified)
 std::vector<ScanResult> ScannerEngine::scan(const std::vector<std::string>& filters, const AppConfig& config)
 {
     std::vector<ScanResult> results;
-    auto caches = mergeCaches(CacheRegistry::getCaches(), config.customCaches);
+    auto caches = mergeCaches(
+        CacheRegistry::getMatchingCaches(filters),
+        config.customCaches
+    );
+
     auto plugins = PluginLoader::getInstance().loadPlugins();
+
+    if (!filters.empty())
+    {
+        std::vector<CacheDefinition> filteredPlugins;
+        for (const auto& plugin : plugins)
+        {
+            if (std::any_of(filters.begin(), filters.end(), [&](const std::string& filter) {
+                    return normalize(plugin.name) == normalize(filter) ||
+                        std::any_of(plugin.aliases.begin(), plugin.aliases.end(),
+                            [&](const std::string& alias) {
+                                return normalize(alias) == normalize(filter);
+                            });
+                }))
+            {
+                filteredPlugins.push_back(plugin);
+            }
+        }
+
+        plugins = std::move(filteredPlugins);
+    }
+
     caches = mergeCaches(caches, plugins);
     results.reserve(caches.size());
 

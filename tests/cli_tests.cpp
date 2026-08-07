@@ -306,7 +306,7 @@ int main()
     std::ofstream(safeCacheDir / "nested" / "artifact.txt") << "cache";
     const auto removed = cleaner.removeDirectory(safeCacheDir);
     assert(removed.success);
-    assert(!std::filesystem::is_regular_file(safeCacheDir));
+    assert(!std::filesystem::is_directory(safeCacheDir));
     std::filesystem::remove_all(tempRoot);
     std::cout << "devclean CLI tests passed" << std::endl;
     return 0;

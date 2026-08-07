@@ -34,6 +34,14 @@ void setEnvVar(const char* name, const std::string& value)
 #endif
 }
 
+std::string normalize(std::string s)
+{
+    std::replace(s.begin(), s.end(), '\\', '/');
+    std::transform(s.begin(), s.end(), s.begin(),
+        [](unsigned char c){ return std::tolower(c); });
+    return s;
+}
+
 std::string getHomeEnv()
 {
 #ifdef _WIN32
@@ -201,7 +209,10 @@ int main()
     auto* originalBuffer = std::cout.rdbuf(scanOutput.rdbuf());
     scanCommand.execute(scanArgs);
     std::cout.rdbuf(originalBuffer);
-    assert(scanOutput.str().find(pipEnvCache.string()) != std::string::npos);
+    assert(
+        normalize(scanOutput.str()).find(normalize(pipEnvCache.string()))
+        != std::string::npos
+    );
 
     const auto cargoHome = tempRoot / "cargo-home";
     std::filesystem::create_directories(cargoHome / "registry");
@@ -215,8 +226,11 @@ int main()
     originalBuffer = std::cout.rdbuf(cargoScanOutput.rdbuf());
     scanCommand.execute(cargoScanArgs);
     std::cout.rdbuf(originalBuffer);
-    assert(cargoScanOutput.str().find((cargoHome / "registry").string()) != std::string::npos);
-
+    assert(
+        normalize(cargoScanOutput.str()).find(
+            normalize((cargoHome / "registry").string())
+        ) != std::string::npos
+    );
     const auto pluginJson = pluginDir / "custom-plugin.json";
 
     std::ofstream pluginFile(pluginJson);

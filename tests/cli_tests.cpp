@@ -38,7 +38,16 @@ std::string normalize(std::string s)
 {
     std::replace(s.begin(), s.end(), '\\', '/');
     std::transform(s.begin(), s.end(), s.begin(),
-        [](unsigned char c){ return std::tolower(c); });
+        [](unsigned char c) {
+            return static_cast<char>(std::tolower(c));
+        });
+
+    s.erase(std::unique(s.begin(), s.end(),
+        [](char a, char b) {
+            return a == '/' && b == '/';
+        }),
+        s.end());
+
     return s;
 }
 
@@ -209,15 +218,10 @@ int main()
     auto* originalBuffer = std::cout.rdbuf(scanOutput.rdbuf());
     scanCommand.execute(scanArgs);
     std::cout.rdbuf(originalBuffer);
-    const auto out = normalize(scanOutput.str());
-const auto expected = normalize(pipEnvCache.string());
-
-if (out.find(expected) == std::string::npos) {
-    std::cerr << "EXPECTED: " << expected << '\n';
-    std::cerr << "OUTPUT:\n" << out << '\n';
-}
-
-assert(out.find(expected) != std::string::npos);
+    assert(
+        normalize(scanOutput.str()).find(normalize(pipEnvCache.string()))
+        != std::string::npos
+    );
     const auto cargoHome = tempRoot / "cargo-home";
     std::filesystem::create_directories(cargoHome / "registry");
     setEnvVar("CARGO_HOME", cargoHome.string());

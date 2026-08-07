@@ -73,7 +73,7 @@ Filesystem::DirectorySummary Filesystem::inspectDirectory(const fs::path& path)
         {
             ++summary.directories;
         }
-        else if (entry.is_regular_file(entryEc) && !entryEc)
+        else if (entry.exists(entryEc) && !entryEc)
         {
             ++summary.files;
             std::error_code sizeEc;
@@ -156,7 +156,7 @@ uint64_t Filesystem::fileCount(const fs::path& path)
 
         const auto& entry = *it;
         std::error_code entryEc;
-        if (entry.is_regular_file(entryEc) && !entryEc)
+        if (entry.exists(entryEc) && !entryEc)
             ++count;
     }
 

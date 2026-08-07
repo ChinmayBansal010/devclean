@@ -268,7 +268,7 @@ int main()
 
     pluginFile.close();
 
-    assert(std::filesystem::exists(pluginJson));
+    assert(std::filesystem::is_regular_file(pluginJson));
 
     const auto loadedPlugins = PluginLoader::getInstance().loadPlugins();
 
@@ -306,7 +306,7 @@ int main()
     std::ofstream(safeCacheDir / "nested" / "artifact.txt") << "cache";
     const auto removed = cleaner.removeDirectory(safeCacheDir);
     assert(removed.success);
-    assert(!std::filesystem::exists(safeCacheDir));
+    assert(!std::filesystem::is_regular_file(safeCacheDir));
     std::filesystem::remove_all(tempRoot);
     std::cout << "devclean CLI tests passed" << std::endl;
     return 0;

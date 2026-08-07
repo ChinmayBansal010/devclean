@@ -72,7 +72,7 @@ std::vector<CacheDefinition> PluginLoader::loadPlugins()
     }
 #endif
 
-    if (!pluginDir.empty() && std::filesystem::exists(pluginDir)) {
+    if (!pluginDir.empty() && std::filesystem::is_regular_file(pluginDir)) {
         loadPluginsFromDirectory(pluginDir);
     }
 
@@ -82,7 +82,7 @@ std::vector<CacheDefinition> PluginLoader::loadPlugins()
 void PluginLoader::loadPluginsFromDirectory(
     const std::filesystem::path& pluginDir)
 {
-    if (!std::filesystem::exists(pluginDir)) {
+    if (!std::filesystem::is_regular_file(pluginDir)) {
         return;
     }
 

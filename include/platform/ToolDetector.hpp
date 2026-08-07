@@ -15,7 +15,6 @@ public:
     bool isIdeRunning();
     bool hasActivePackageManager();
     std::vector<std::string> getWarningsForCache(const std::string& cacheName);
-    std::unordered_set<std::string> detectInstalledTools();
 
 private:
     ToolDetector() = default;
@@ -24,6 +23,4 @@ private:
     ToolDetector(const ToolDetector&) = delete;
     ToolDetector& operator=(const ToolDetector&) = delete;
 
-    std::unordered_set<std::string> detectedTools;
-    bool initialized = false;
 };

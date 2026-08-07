@@ -195,10 +195,9 @@ bool PluginLoader::validatePluginDefinition(const CacheDefinition& cache)
     }
 #endif
 
-    cache.cachePaths.erase(
-        std::remove_if(cache.cachePaths.begin(), cache.cachePaths.end(),
-                    [](const auto& p) { return !isValidPluginPath(p); }),
-        cache.cachePaths.end());
+    if (!std::all_of(cache.cachePaths.begin(), cache.cachePaths.end(), isValidPluginPath)) {
+        return false;
+    }
 
     return true;
 }

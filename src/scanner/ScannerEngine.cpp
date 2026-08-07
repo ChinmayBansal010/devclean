@@ -84,12 +84,14 @@ std::filesystem::path resolveConfiguredPath(const CacheDefinition& cache)
         if (rawValue == nullptr || *rawValue == '\0')
             continue;
 
-        const auto candidate = expandUserPath(rawValue);
-        if (candidate.is_absolute())
-        {
-            const auto suffix = environmentPathSuffix(envVar);
-            return suffix.empty() ? candidate : candidate / suffix;
-        }
+        std::filesystem::path candidate = expandUserPath(rawValue);
+
+        // Make relative paths absolute
+        if (!candidate.is_absolute())
+            candidate = std::filesystem::absolute(candidate);
+
+        const auto suffix = environmentPathSuffix(envVar);
+        return suffix.empty() ? candidate : candidate / suffix;
     }
 
 #ifdef _WIN32

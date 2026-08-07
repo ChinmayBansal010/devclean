@@ -6,6 +6,8 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <filesystem>
+#include <sstream>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -33,11 +35,40 @@ std::string normalize(std::string value)
 
 bool ToolDetector::isInstalled(const std::string& toolName)
 {
-    if (!initialized) {
-        detectedTools = detectInstalledTools();
-        initialized = true;
-    }
-    return detectedTools.find(normalize(toolName)) != detectedTools.end();
+    #ifdef _WIN32
+        char buffer[MAX_PATH];
+
+        DWORD result = SearchPathA(
+            nullptr,
+            toolName.c_str(),
+            nullptr,
+            MAX_PATH,
+            buffer,
+            nullptr
+        );
+
+        return result != 0;
+    #else
+        const char* pathEnv = std::getenv("PATH");
+        if (pathEnv == nullptr)
+            return false;
+
+        std::stringstream ss(pathEnv);
+        std::string dir;
+
+        while (std::getline(ss, dir, ':'))
+        {
+            std::filesystem::path candidate = std::filesystem::path(dir) / toolName;
+
+            if (std::filesystem::is_regular_file(candidate) &&
+                access(candidate.c_str(), X_OK) == 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    #endif
 }
 
 bool ToolDetector::isRunning(const std::string& processName)
@@ -81,58 +112,3 @@ std::vector<std::string> ToolDetector::getWarningsForCache(const std::string& ca
 
     return warnings;
 }
-
-std::unordered_set<std::string> ToolDetector::detectInstalledTools()
-{
-    std::unordered_set<std::string> installed;
-
-    std::unordered_map<std::string, std::string> toolCommands = {
-        {"bun", "bun --version"},
-        {"cargo", "cargo --version"},
-        {"bazel", "bazel --version"},
-        {"ccache", "ccache --version"},
-        {"cmake", "cmake --version"},
-        {"conan", "conan --version"},
-        {"npm", "npm --version"},
-        {"pnpm", "pnpm --version"},
-        {"pip", "pip --version"},
-        {"pipenv", "pipenv --version"},
-        {"pixi", "pixi --version"},
-        {"poetry", "poetry --version"},
-        {"uv", "uv --version"},
-        {"yarn", "yarn --version"},
-        {"gradle", "gradle --version"},
-        {"maven", "mvn --version"},
-        {"mamba", "mamba --version"},
-        {"meson", "meson --version"},
-        {"nvm", "nvm --version"},
-        {"podman", "podman --version"},
-        {"rustup", "rustup --version"},
-        {"vcpkg", "vcpkg version"},
-        {"python", "python --version"},
-        {"python3", "python3 --version"},
-        {"pip3", "pip3 --version"},
-        {"go", "go version"},
-        {"rustc", "rustc --version"},
-        {"java", "java -version"},
-        {"docker", "docker --version"},
-        {"dotnet", "dotnet --version"},
-        {"swift", "swift --version"},
-        {"ruby", "ruby --version"},
-        {"php", "php --version"},
-    };
-
-    for (const auto& [tool, command] : toolCommands) {
-#ifdef _WIN32
-        std::string cmd = command + " >nul 2>&1";
-#else
-        std::string cmd = command + " >/dev/null 2>&1";
-#endif
-        if (std::system(cmd.c_str()) == 0) {
-            installed.insert(tool);
-        }
-    }
-
-    return installed;
-}
-

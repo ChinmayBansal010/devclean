@@ -149,9 +149,33 @@ std::vector<ScanResult> ScannerEngine::scan(const std::vector<std::string>& filt
 {
     std::vector<ScanResult> results;
     auto caches = mergeCaches(
-        CacheRegistry::getMatchingCaches(filters),
+        CacheRegistry::getCaches(),
         config.customCaches
     );
+
+    if (!filters.empty())
+    {
+        caches.erase(
+            std::remove_if(caches.begin(), caches.end(),
+                [&](const CacheDefinition& cache)
+                {
+                    return !std::any_of(filters.begin(), filters.end(),
+                        [&](const std::string& filter)
+                        {
+                            if (normalize(cache.name) == normalize(filter))
+                                return true;
+
+                            return std::any_of(
+                                cache.aliases.begin(),
+                                cache.aliases.end(),
+                                [&](const std::string& alias)
+                                {
+                                    return normalize(alias) == normalize(filter);
+                                });
+                        });
+                }),
+            caches.end());
+    }
 
     auto plugins = PluginLoader::getInstance().loadPlugins();
 

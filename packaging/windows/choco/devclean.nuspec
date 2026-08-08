@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>devclean</id>
-    <version>0.0.1</version>
+    <version>1.0.1</version>
     <authors>devclean</authors>
     <description>Developer cache cleaner</description>
   </metadata>

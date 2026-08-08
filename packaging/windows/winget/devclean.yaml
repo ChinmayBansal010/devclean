@@ -1,5 +1,5 @@
 PackageIdentifier: devclean
-PackageVersion: 0.0.1
+PackageVersion: 1.0.1
 InstallerType: portable
 Installers:
   - Architecture: x64

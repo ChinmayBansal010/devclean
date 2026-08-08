@@ -2,7 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.0.1] - 2026-07-25
+## [1.0.1] - 2026-08-08
+
+### 🔧 Fixes and Improvements
+
+- Improved cross-platform cache path resolution and tool detection.
+- Respected cache-specific environment variables when resolving configured paths.
+- Optimized scanning by limiting work to requested cache definitions.
+- Applied scan filters consistently across built-in, custom, and plugin caches.
+- Fixed Windows debug scan failures and improved Windows path handling in CLI tests.
+- Normalized Windows paths in tests to make filesystem comparisons reliable across path formats.
+
+## [1.0.0] - 2026-07-25
 
 ### 🎉 Initial Stable Release
 

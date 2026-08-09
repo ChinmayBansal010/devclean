@@ -67,6 +67,3 @@ release-manifest.txt
 *.rpm
 *.tar.gz
 *.zip
-!devclean-0.1.0-Linux.deb
-!devclean-0.1.0-Linux.rpm
-!devclean-0.1.0-Linux.tar.gz

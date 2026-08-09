@@ -21,7 +21,12 @@ bool isOption(const std::string& token)
     return token.rfind("--", 0) == 0;
 }
 
-} // namespace
+bool hasValue(int index, int argc, char* argv[])
+{
+    return index + 1 < argc && !isOption(argv[index + 1]);
+}
+
+}
 
 ParsedArgs ArgumentParser::parse(int argc, char* argv[])
 {
@@ -54,22 +59,22 @@ ParsedArgs ArgumentParser::parse(int argc, char* argv[])
         }
         else if (token == "--category")
         {
-            if (i + 1 < argc)
+            if (hasValue(i, argc, argv))
                 args.category = normalize(argv[++i]);
         }
         else if (token == "--exclude")
         {
-            if (i + 1 < argc)
+            if (hasValue(i, argc, argv))
                 args.excludes.emplace_back(normalize(argv[++i]));
         }
         else if (token == "--sort")
         {
-            if (i + 1 < argc)
+            if (hasValue(i, argc, argv))
                 args.sort = normalize(argv[++i]);
         }
         else if (token == "--report")
         {
-            if (i + 1 < argc)
+            if (hasValue(i, argc, argv))
                 args.reportFormat = normalize(argv[++i]);
         }
         else if (token == "--reverse")

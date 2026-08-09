@@ -87,6 +87,8 @@ devclean version
 
 `scan` shows the cache name, size, file count, category, warning count, and resolved path. This helps you confirm whether the tool is using the expected cache root on your platform.
 
+For the full command and option reference, see [CLI Reference](docs/cli.md).
+
 ## Safety
 
 `devclean` refuses destructive cleanup for protected locations such as:
@@ -129,8 +131,10 @@ Useful fields:
 
 ## Project docs
 
+- [CLI Reference](docs/cli.md)
 - [Architecture](docs/architecture.md)
 - [Plugin guide](docs/plugins.md)
+- [Testing guide](docs/testing.md)
 - [Roadmap](docs/roadmap.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)

@@ -45,7 +45,7 @@ devclean stats --json
 ```bash
 devclean clean --dry-run
 devclean clean --dry-run python
- devclean clean --force --exclude npm
+devclean clean --force --exclude npm
 ```
 
 Use `--dry-run` before destructive cleanup. `--force` bypasses interactive confirmation where the command permits it. Protected locations remain blocked by the safety layer.

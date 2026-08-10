@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 3,
+  "disabledCaches": [
+    "cargo"
+  ],
+  "ignoredCaches": [
+    "npm"
+  ],
+  "defaultSort": "size",
+  "defaultCategory": "python",
+  "customCaches": [
+    {
+      "name": "my-build-cache",
+      "category": "build",
+      "description": "Example project build cache",
+      "enabled": true,
+      "priority": 10,
+      "aliases": [
+        "my-build"
+      ],
+      "environmentVariables": [
+        "MY_BUILD_CACHE"
+      ],
+      "osSupport": [
+        "linux",
+        "windows",
+        "macos"
+      ],
+      "linuxPath": "/absolute/path/to/cache",
+      "windowsPath": "C:/absolute/path/to/cache",
+      "macosPath": "/absolute/path/to/cache"
+    }
+  ]
+}

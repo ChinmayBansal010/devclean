@@ -285,46 +285,59 @@ void ConfigLoader::save(const AppConfig& config)
     if (configPath.empty())
         return;
 
-    std::filesystem::create_directories(configPath.parent_path());
+    try
+    {
+        std::filesystem::create_directories(configPath.parent_path());
 
-    json j;
-    j["schemaVersion"] = config.schemaVersion;
-    j["disabledCaches"] = config.disabledCaches;
-    j["ignoredCaches"] = config.ignoredCaches;
-    j["defaultColor"] = config.defaultColor;
-    j["defaultSort"] = config.defaultSort;
-    j["defaultCategory"] = config.defaultCategory;
-    j["version"] = config.version;
+        json j;
+        j["schemaVersion"] = config.schemaVersion;
+        j["disabledCaches"] = config.disabledCaches;
+        j["ignoredCaches"] = config.ignoredCaches;
+        j["defaultColor"] = config.defaultColor;
+        j["defaultSort"] = config.defaultSort;
+        j["defaultCategory"] = config.defaultCategory;
+        j["version"] = config.version;
 
-    json customCaches = json::array();
-    for (const auto& cache : config.customCaches) {
-        json cacheJson;
-        cacheJson["name"] = cache.name;
-        cacheJson["category"] = cache.category;
-        cacheJson["description"] = cache.description;
-        cacheJson["enabled"] = cache.enabled;
-        cacheJson["priority"] = cache.priority;
-        cacheJson["aliases"] = cache.aliases;
-        cacheJson["environmentVariables"] = cache.environmentVariables;
-        cacheJson["osSupport"] = cache.osSupport;
-        cacheJson["cachePaths"] = json::array();
-        for (const auto& path : cache.cachePaths)
-            cacheJson["cachePaths"].push_back(path.string());
+        json customCaches = json::array();
+        for (const auto& cache : config.customCaches) {
+            json cacheJson;
+            cacheJson["name"] = cache.name;
+            cacheJson["category"] = cache.category;
+            cacheJson["description"] = cache.description;
+            cacheJson["enabled"] = cache.enabled;
+            cacheJson["priority"] = cache.priority;
+            cacheJson["aliases"] = cache.aliases;
+            cacheJson["environmentVariables"] = cache.environmentVariables;
+            cacheJson["osSupport"] = cache.osSupport;
+            cacheJson["cachePaths"] = json::array();
+            for (const auto& path : cache.cachePaths)
+                cacheJson["cachePaths"].push_back(path.string());
 
 #ifdef _WIN32
-        if (!cache.windowsPath.empty()) {
-            cacheJson["windowsPath"] = cache.windowsPath.string();
-        }
+            if (!cache.windowsPath.empty())
+                cacheJson["windowsPath"] = cache.windowsPath.string();
 #else
-        if (!cache.linuxPath.empty()) {
-            cacheJson["linuxPath"] = cache.linuxPath.string();
-        }
+            if (!cache.linuxPath.empty())
+                cacheJson["linuxPath"] = cache.linuxPath.string();
 #endif
 
-        customCaches.push_back(cacheJson);
-    }
-    j["customCaches"] = customCaches;
+            customCaches.push_back(cacheJson);
+        }
+        j["customCaches"] = customCaches;
 
-    std::ofstream output(configPath);
-    output << j.dump(2);
+        std::ofstream output(configPath, std::ios::trunc);
+        if (!output)
+        {
+            std::cerr << "Warning: Failed to open config for writing: " << configPath << "\n";
+            return;
+        }
+
+        output << j.dump(2) << '\n';
+        if (!output)
+            std::cerr << "Warning: Failed to write config: " << configPath << "\n";
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "Warning: Failed to save config: " << e.what() << "\n";
+    }
 }

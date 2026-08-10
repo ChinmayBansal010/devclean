@@ -9,6 +9,8 @@ labels: bug
 
 - devclean version:
 - OS:
+- compiler:
+- CMake version:
 - install method:
 
 ## Reproduction
@@ -21,4 +23,12 @@ labels: bug
 
 ## Actual behavior
 
+## Command output
+
+```text
+Paste the relevant output here.
+```
+
 ## Additional context
+
+Include configuration or logs that help reproduce the issue. Remove secrets, tokens, and unnecessary personal paths before posting.

@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -93,7 +93,7 @@ jobs:
 
     - name: Build
       run: cmake --build build --config ${{ matrix.build_type }} --parallel
-    
+
     - name: Test
       working-directory: build
       run: ctest --output-on-failure --build-config ${{ matrix.build_type }} --timeout 60 -V
@@ -178,9 +178,12 @@ jobs:
           --std=c++23 \
           --error-exitcode=1 \
           --inline-suppr
+
   package:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: [build, sanitizers]
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -274,11 +277,13 @@ jobs:
   release:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: [package]
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
       with:
-          fetch-depth: 1
+        fetch-depth: 1
     - uses: actions/download-artifact@v4
       with:
         path: release-artifacts

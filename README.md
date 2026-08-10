@@ -109,17 +109,7 @@ Configuration is loaded automatically from:
 - Linux/macOS: `~/.config/devclean/config.json`
 - Windows: `%APPDATA%/devclean/config.json`
 
-Example:
-
-```json
-{
-  "schemaVersion": 3,
-  "disabledCaches": ["cargo"],
-  "ignoredCaches": ["npm"],
-  "defaultSort": "size",
-  "defaultCategory": "python"
-}
-```
+See [`docs/config.example.json`](docs/config.example.json) for a complete custom-cache example.
 
 Useful fields:
 
@@ -132,10 +122,13 @@ Useful fields:
 ## Project docs
 
 - [CLI Reference](docs/cli.md)
+- [Configuration example](docs/config.example.json)
 - [Architecture](docs/architecture.md)
 - [Performance Notes](docs/performance.md)
 - [Plugin guide](docs/plugins.md)
 - [Testing guide](docs/testing.md)
+- [Troubleshooting](docs/troubleshooting.md)
+- [Exit codes](docs/exit-codes.md)
 - [Roadmap](docs/roadmap.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)

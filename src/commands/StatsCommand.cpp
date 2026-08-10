@@ -10,6 +10,31 @@
 #include <nlohmann/json.hpp>
 #include <vector>
 
+namespace {
+
+using CategoryStat = std::pair<std::string, std::pair<uint64_t, std::size_t>>;
+
+std::vector<CategoryStat> sortCategories(
+    const std::map<std::string, uint64_t>& categoryBytes,
+    const std::map<std::string, std::size_t>& categoryCounts)
+{
+    std::vector<CategoryStat> categories;
+    categories.reserve(categoryBytes.size());
+
+    for (const auto& [category, bytes] : categoryBytes)
+        categories.emplace_back(category, std::make_pair(bytes, categoryCounts.at(category)));
+
+    std::stable_sort(categories.begin(), categories.end(), [](const auto& lhs, const auto& rhs) {
+        if (lhs.second.first != rhs.second.first)
+            return lhs.second.first > rhs.second.first;
+        return lhs.first < rhs.first;
+    });
+
+    return categories;
+}
+
+}
+
 int StatsCommand::execute(const ParsedArgs& args)
 {
     AppConfig config = ConfigLoader::load();
@@ -40,8 +65,12 @@ int StatsCommand::execute(const ParsedArgs& args)
     }
 
     std::stable_sort(largestCaches.begin(), largestCaches.end(), [](const auto& lhs, const auto& rhs) {
-        return lhs.second > rhs.second;
+        if (lhs.second != rhs.second)
+            return lhs.second > rhs.second;
+        return lhs.first < rhs.first;
     });
+
+    const auto categories = sortCategories(categoryBytes, categoryCounts);
 
     if (args.json)
     {
@@ -61,12 +90,12 @@ int StatsCommand::execute(const ParsedArgs& args)
             payload["largest_caches"].push_back(std::move(entry));
         }
         payload["largest_categories"] = nlohmann::json::array();
-        for (const auto& [category, bytes] : categoryBytes)
+        for (const auto& [category, stat] : categories)
         {
             nlohmann::json entry = nlohmann::json::object();
             entry["name"] = category;
-            entry["bytes"] = bytes;
-            entry["count"] = categoryCounts[category];
+            entry["bytes"] = stat.first;
+            entry["count"] = stat.second;
             payload["largest_categories"].push_back(std::move(entry));
         }
         std::cout << payload.dump(2) << '\n';
@@ -84,7 +113,7 @@ int StatsCommand::execute(const ParsedArgs& args)
     for (std::size_t i = 0; i < std::min<std::size_t>(largestCaches.size(), 5); ++i)
         std::cout << "  - " << largestCaches[i].first << " (" << Formatter::formatBytes(largestCaches[i].second) << ")\n";
     std::cout << "\nLargest categories:\n";
-    for (const auto& [category, bytes] : categoryBytes)
-        std::cout << "  - " << category << " (" << Formatter::formatBytes(bytes) << ", " << categoryCounts[category] << ")\n";
+    for (const auto& [category, stat] : categories)
+        std::cout << "  - " << category << " (" << Formatter::formatBytes(stat.first) << ", " << stat.second << ")\n";
     return 0;
 }

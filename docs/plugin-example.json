@@ -1,0 +1,24 @@
+{
+  "name": "example-build-cache",
+  "category": "build",
+  "description": "Example cache loaded from the plugin directory",
+  "enabled": true,
+  "priority": 5,
+  "aliases": [
+    "example-build"
+  ],
+  "environmentVariables": [
+    "EXAMPLE_BUILD_CACHE"
+  ],
+  "osSupport": [
+    "linux",
+    "windows",
+    "macos"
+  ],
+  "linuxPath": "/absolute/path/to/linux/cache",
+  "windowsPath": "C:/absolute/path/to/windows/cache",
+  "macosPath": "/absolute/path/to/macos/cache",
+  "cachePaths": [
+    "/absolute/path/to/alternate/cache"
+  ]
+}

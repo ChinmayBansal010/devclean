@@ -133,6 +133,7 @@ Useful fields:
 
 - [CLI Reference](docs/cli.md)
 - [Architecture](docs/architecture.md)
+- [Performance Notes](docs/performance.md)
 - [Plugin guide](docs/plugins.md)
 - [Testing guide](docs/testing.md)
 - [Roadmap](docs/roadmap.md)

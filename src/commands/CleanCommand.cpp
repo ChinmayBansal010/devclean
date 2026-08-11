@@ -20,8 +20,6 @@
 
 namespace {
 
-constexpr const char* activeFilterToken = "__active_only__";
-
 std::string normalize(const std::string& value)
 {
     std::string result = value;
@@ -41,11 +39,11 @@ std::string canonicalCategory(const std::string& value)
     return normalized;
 }
 
-std::vector<ScanResult> applyFilters(const std::vector<ScanResult>& input, const ParsedArgs& args, bool activeOnly)
+std::vector<ScanResult> applyFilters(const std::vector<ScanResult>& input, const ParsedArgs& args)
 {
     std::vector<ScanResult> results = input;
 
-    if (activeOnly)
+    if (args.activeOnly)
     {
         results.erase(std::remove_if(results.begin(), results.end(), [](const ScanResult& result) {
             return !result.active;
@@ -130,8 +128,6 @@ int CleanCommand::execute(const ParsedArgs& args)
 {
     AppConfig config = ConfigLoader::load();
     ParsedArgs effectiveArgs = args;
-    const bool activeOnly = std::find(effectiveArgs.targets.begin(), effectiveArgs.targets.end(), activeFilterToken) != effectiveArgs.targets.end();
-    effectiveArgs.targets.erase(std::remove(effectiveArgs.targets.begin(), effectiveArgs.targets.end(), activeFilterToken), effectiveArgs.targets.end());
 
     if (effectiveArgs.category.empty() && !config.defaultCategory.empty())
         effectiveArgs.category = config.defaultCategory;
@@ -139,7 +135,7 @@ int CleanCommand::execute(const ParsedArgs& args)
     CleanEngine cleaner;
 
     auto results = scanner.scan(effectiveArgs.targets, config);
-    auto candidates = applyFilters(results, effectiveArgs, activeOnly);
+    auto candidates = applyFilters(results, effectiveArgs);
     candidates.erase(std::remove_if(candidates.begin(), candidates.end(), [](const ScanResult& result) {
         return !result.found;
     }), candidates.end());
@@ -156,7 +152,7 @@ int CleanCommand::execute(const ParsedArgs& args)
         payload["command"] = "clean";
         payload["dry_run"] = args.dryRun;
         payload["force"] = args.force;
-        payload["active_only"] = activeOnly;
+        payload["active_only"] = args.activeOnly;
         payload["targets"] = effectiveArgs.targets;
         payload["caches"] = nlohmann::json::array();
         for (const auto& candidate : candidates)

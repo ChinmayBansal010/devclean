@@ -1,1 +1,0 @@
-Runtime filters are evaluated after discovery.

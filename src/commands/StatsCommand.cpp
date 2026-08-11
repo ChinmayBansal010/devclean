@@ -45,6 +45,7 @@ int StatsCommand::execute(const ParsedArgs& args)
     uint64_t totalFiles = 0;
     uint64_t totalDirectories = 0;
     std::size_t foundCount = 0;
+    std::size_t activeCount = 0;
     std::map<std::string, uint64_t> categoryBytes;
     std::map<std::string, std::size_t> categoryCounts;
     std::vector<std::pair<std::string, uint64_t>> largestCaches;
@@ -54,6 +55,8 @@ int StatsCommand::execute(const ParsedArgs& args)
         totalBytes += result.bytes;
         totalFiles += result.files;
         totalDirectories += result.directories;
+        if (result.active)
+            ++activeCount;
         if (result.found)
         {
             ++foundCount;
@@ -78,6 +81,8 @@ int StatsCommand::execute(const ParsedArgs& args)
         payload["command"] = "stats";
         payload["cache_count"] = results.size();
         payload["found_count"] = foundCount;
+        payload["active_count"] = activeCount;
+        payload["inactive_count"] = results.size() - activeCount;
         payload["total_bytes"] = totalBytes;
         payload["total_files"] = totalFiles;
         payload["total_directories"] = totalDirectories;
@@ -106,6 +111,8 @@ int StatsCommand::execute(const ParsedArgs& args)
     std::cout << "----------\n";
     std::cout << "Caches scanned: " << results.size() << '\n';
     std::cout << "Caches found: " << foundCount << '\n';
+    std::cout << "Active tools: " << activeCount << '\n';
+    std::cout << "Inactive tools: " << results.size() - activeCount << '\n';
     std::cout << "Total size: " << Formatter::formatBytes(totalBytes) << '\n';
     std::cout << "Total files: " << totalFiles << '\n';
     std::cout << "Total directories: " << totalDirectories << '\n';

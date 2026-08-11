@@ -46,7 +46,7 @@ ParsedArgs ArgumentParser::parse(int argc, char* argv[])
         else if (token == "--force")
             args.force = true;
         else if (token == "--active-only")
-            args.activeOnly = true;
+            args.targets.emplace_back("__active_only__");
         else if (token == "--help" || token == "-h")
             args.help = true;
         else if (token == "--category")

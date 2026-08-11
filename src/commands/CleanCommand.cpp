@@ -12,6 +12,12 @@
 #include <sstream>
 #include <vector>
 
+#ifdef _WIN32
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
+
 namespace {
 
 constexpr const char* activeFilterToken = "__active_only__";
@@ -69,7 +75,11 @@ std::vector<ScanResult> applyFilters(const std::vector<ScanResult>& input, const
 
 bool isInteractiveTerminal()
 {
-    return std::cin.good();
+#ifdef _WIN32
+    return _isatty(_fileno(stdin)) != 0 && _isatty(_fileno(stdout)) != 0;
+#else
+    return isatty(fileno(stdin)) != 0 && isatty(fileno(stdout)) != 0;
+#endif
 }
 
 std::vector<ScanResult> selectCandidates(const std::vector<ScanResult>& candidates)

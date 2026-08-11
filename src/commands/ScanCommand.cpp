@@ -37,6 +37,13 @@ std::vector<ScanResult> applyFiltersAndSort(const std::vector<ScanResult>& input
 {
     std::vector<ScanResult> results = input;
 
+    if (args.activeOnly)
+    {
+        results.erase(std::remove_if(results.begin(), results.end(), [](const ScanResult& result) {
+            return !result.active;
+        }), results.end());
+    }
+
     if (!args.category.empty())
     {
         const std::string category = canonicalCategory(args.category);
@@ -137,6 +144,7 @@ int ScanCommand::execute(const ParsedArgs& args)
         nlohmann::json payload = nlohmann::json::object();
         payload["command"] = "scan";
         payload["total_bytes"] = total;
+        payload["active_only"] = args.activeOnly;
 
         nlohmann::json caches = nlohmann::json::array();
         for (const auto& result : filtered)
@@ -147,6 +155,7 @@ int ScanCommand::execute(const ParsedArgs& args)
             entry["path"] = result.location.string();
             entry["category"] = result.category;
             entry["found"] = result.found;
+            entry["active"] = result.active;
             entry["bytes"] = result.bytes;
             entry["files"] = result.files;
             entry["directories"] = result.directories;

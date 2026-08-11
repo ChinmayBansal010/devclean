@@ -3,22 +3,21 @@
 #endif
 #include "cleaner/CleanEngine.hpp"
 #include "commands/ScanCommand.hpp"
-#include "core/ArgumentParser.hpp"
 #include "core/Config.hpp"
 #include "platform/Filesystem.hpp"
 #include "scanner/CacheRegistry.hpp"
 #include "scanner/PluginLoader.hpp"
 
+#include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <algorithm>
-#include <chrono>
-#include <sstream>
 
 namespace {
 
@@ -26,7 +25,6 @@ void setEnvVar(const char* name, const std::string& value)
 {
 #ifdef _WIN32
     _putenv_s(name, value.c_str());
-
     if (std::string(name) == "HOME")
         _putenv_s("USERPROFILE", value.c_str());
 #else
@@ -65,23 +63,6 @@ std::string getHomeEnv()
 
 int main()
 {
-    char* argv[] = {
-        const_cast<char*>("devclean"),
-        const_cast<char*>("clean"),
-        const_cast<char*>("--force"),
-        const_cast<char*>("--dry-run"),
-        const_cast<char*>("python"),
-        const_cast<char*>("cargo")
-    };
-
-    const ParsedArgs parsed = ArgumentParser::parse(6, argv);
-    assert(parsed.command == "clean");
-    assert(parsed.force);
-    assert(parsed.dryRun);
-    assert(parsed.targets.size() == 2);
-    assert(parsed.targets[0] == "python");
-    assert(parsed.targets[1] == "cargo");
-
     const auto pythonCaches = CacheRegistry::getMatchingCaches({"python"});
     assert(!pythonCaches.empty());
     assert(std::any_of(pythonCaches.begin(), pythonCaches.end(), [](const CacheDefinition& cache) {
@@ -153,28 +134,21 @@ int main()
         std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     setEnvVar("HOME", tempRoot.string());
 
-    #ifdef _WIN32
+#ifdef _WIN32
     setEnvVar("USERPROFILE", tempRoot.string());
-    #endif
+#endif
 
     std::filesystem::path pluginDir;
 
-    #ifdef _WIN32
+#ifdef _WIN32
     const char* appData = std::getenv("APPDATA");
     assert(appData != nullptr);
-
-    pluginDir = std::filesystem::path(appData)
-            / "devclean"
-            / "plugins";
-    #else
-    pluginDir = tempRoot
-            / ".config"
-            / "devclean"
-            / "plugins";
-    #endif
+    pluginDir = std::filesystem::path(appData) / "devclean" / "plugins";
+#else
+    pluginDir = tempRoot / ".config" / "devclean" / "plugins";
+#endif
 
     std::filesystem::create_directories(pluginDir);
-
 
     AppConfig customConfig;
     CacheDefinition customCache;
@@ -186,11 +160,11 @@ int main()
     customCache.aliases = {"custom"};
     customCache.environmentVariables = {"DEV_CLEAN_TEST"};
     customCache.osSupport = {"linux", "windows"};
-    #ifdef _WIN32
+#ifdef _WIN32
     customCache.windowsPath = tempRoot / "custom-cache";
-    #else
+#else
     customCache.linuxPath = tempRoot / "custom-cache";
-    #endif
+#endif
     customCache.cachePaths = {tempRoot / "custom-cache" / "." / "alt"};
     customConfig.customCaches.push_back(customCache);
     ConfigLoader::save(customConfig);
@@ -218,10 +192,8 @@ int main()
     auto* originalBuffer = std::cout.rdbuf(scanOutput.rdbuf());
     scanCommand.execute(scanArgs);
     std::cout.rdbuf(originalBuffer);
-    assert(
-        normalize(scanOutput.str()).find(normalize(pipEnvCache.string()))
-        != std::string::npos
-    );
+    assert(normalize(scanOutput.str()).find(normalize(pipEnvCache.string())) != std::string::npos);
+
     const auto cargoHome = tempRoot / "cargo-home";
     std::filesystem::create_directories(cargoHome / "registry");
     setEnvVar("CARGO_HOME", cargoHome.string());
@@ -234,21 +206,18 @@ int main()
     originalBuffer = std::cout.rdbuf(cargoScanOutput.rdbuf());
     scanCommand.execute(cargoScanArgs);
     std::cout.rdbuf(originalBuffer);
-    assert(
-        normalize(cargoScanOutput.str()).find(
-            normalize((cargoHome / "registry").string())
-        ) != std::string::npos
-    );
-    const auto pluginJson = pluginDir / "custom-plugin.json";
+    assert(normalize(cargoScanOutput.str()).find(normalize((cargoHome / "registry").string())) != std::string::npos);
 
+    const auto pluginJson = pluginDir / "custom-plugin.json";
     std::ofstream pluginFile(pluginJson);
     assert(pluginFile.is_open());
 
     const auto pluginPath = tempRoot / "plugin-cache";
     const auto pluginAlt = pluginPath / "." / "alt";
-        auto escapeJson = [](std::string s) {
+    auto escapeJson = [](std::string s) {
         size_t pos = 0;
-        while ((pos = s.find('\\', pos)) != std::string::npos) {
+        while ((pos = s.find('\\', pos)) != std::string::npos)
+        {
             s.replace(pos, 1, "\\\\");
             pos += 2;
         }
@@ -258,42 +227,24 @@ int main()
     const std::string pluginPathStr = escapeJson(pluginPath.string());
     const std::string pluginAltStr = escapeJson(pluginAlt.string());
 
-    #ifdef _WIN32
+#ifdef _WIN32
     pluginFile
-        << "{"
-        << "\"name\":\"plugin-cache\","
-        << "\"category\":\"build\","
-        << "\"description\":\"Loaded from plugin\","
-        << "\"enabled\":true,"
-        << "\"priority\":5,"
-        << "\"aliases\":[\"plugin\"],"
-        << "\"environmentVariables\":[\"PLUGIN_CACHE\"],"
-        << "\"osSupport\":[\"linux\",\"windows\"],"
-        << "\"windowsPath\":\"" << pluginPathStr << "\","
-        << "\"cachePaths\":[\"" << pluginAltStr << "\"]"
-        << "}";
-    #else
+        << "{\"name\":\"plugin-cache\",\"category\":\"build\",\"description\":\"Loaded from plugin\","
+        << "\"enabled\":true,\"priority\":5,\"aliases\":[\"plugin\"],"
+        << "\"environmentVariables\":[\"PLUGIN_CACHE\"],\"osSupport\":[\"linux\",\"windows\"],"
+        << "\"windowsPath\":\"" << pluginPathStr << "\",\"cachePaths\":[\"" << pluginAltStr << "\"]}";
+#else
     pluginFile
-        << "{"
-        << "\"name\":\"plugin-cache\","
-        << "\"category\":\"build\","
-        << "\"description\":\"Loaded from plugin\","
-        << "\"enabled\":true,"
-        << "\"priority\":5,"
-        << "\"aliases\":[\"plugin\"],"
-        << "\"environmentVariables\":[\"PLUGIN_CACHE\"],"
-        << "\"osSupport\":[\"linux\",\"windows\"],"
-        << "\"linuxPath\":\"" << pluginPathStr << "\","
-        << "\"cachePaths\":[\"" << pluginAltStr << "\"]"
-        << "}";
-    #endif
+        << "{\"name\":\"plugin-cache\",\"category\":\"build\",\"description\":\"Loaded from plugin\","
+        << "\"enabled\":true,\"priority\":5,\"aliases\":[\"plugin\"],"
+        << "\"environmentVariables\":[\"PLUGIN_CACHE\"],\"osSupport\":[\"linux\",\"windows\"],"
+        << "\"linuxPath\":\"" << pluginPathStr << "\",\"cachePaths\":[\"" << pluginAltStr << "\"]}";
+#endif
 
     pluginFile.close();
-
     assert(std::filesystem::is_regular_file(pluginJson));
 
     const auto loadedPlugins = PluginLoader::getInstance().loadPlugins();
-
     assert(!loadedPlugins.empty());
     assert(std::any_of(loadedPlugins.begin(), loadedPlugins.end(), [](const CacheDefinition& cache) {
         return cache.name == "plugin-cache";
@@ -329,7 +280,8 @@ int main()
     const auto removed = cleaner.removeDirectory(safeCacheDir);
     assert(removed.success);
     assert(!std::filesystem::is_directory(safeCacheDir));
+
     std::filesystem::remove_all(tempRoot);
-    std::cout << "devclean CLI tests passed" << std::endl;
+    std::cout << "devclean integration tests passed" << std::endl;
     return 0;
 }

@@ -38,25 +38,17 @@ ParsedArgs ArgumentParser::parse(int argc, char* argv[])
         std::string lower = normalize(token);
 
         if (token == "--json")
-        {
             args.json = true;
-        }
         else if (token == "--verbose")
-        {
             args.verbose = true;
-        }
         else if (token == "--dry-run")
-        {
             args.dryRun = true;
-        }
         else if (token == "--force")
-        {
             args.force = true;
-        }
+        else if (token == "--active-only")
+            args.activeOnly = true;
         else if (token == "--help" || token == "-h")
-        {
             args.help = true;
-        }
         else if (token == "--category")
         {
             if (hasValue(i, argc, argv))
@@ -78,19 +70,13 @@ ParsedArgs ArgumentParser::parse(int argc, char* argv[])
                 args.reportFormat = normalize(argv[++i]);
         }
         else if (token == "--reverse")
-        {
             args.reverse = true;
-        }
         else if (!isOption(token))
         {
             if (args.command.empty())
-            {
                 args.command = lower;
-            }
             else
-            {
                 args.targets.emplace_back(lower);
-            }
         }
     }
 

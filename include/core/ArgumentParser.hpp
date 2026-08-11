@@ -11,6 +11,7 @@ struct ParsedArgs
     std::string category;
     std::string sort = "name";
     std::string reportFormat;
+    bool activeOnly = false;
     bool reverse = false;
     bool json = false;
     bool verbose = false;

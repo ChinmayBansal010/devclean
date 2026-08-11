@@ -14,8 +14,6 @@
 
 namespace {
 
-constexpr const char* activeFilterToken = "__active_only__";
-
 std::string normalize(const std::string& value)
 {
     std::string result = value;
@@ -36,12 +34,11 @@ std::string canonicalCategory(const std::string& value)
 }
 
 std::vector<ScanResult> applyFiltersAndSort(const std::vector<ScanResult>& input,
-                                            const ParsedArgs& args,
-                                            bool activeOnly)
+                                            const ParsedArgs& args)
 {
     std::vector<ScanResult> results = input;
 
-    if (activeOnly)
+    if (args.activeOnly)
     {
         results.erase(std::remove_if(results.begin(), results.end(), [](const ScanResult& result) {
             return !result.active;
@@ -129,8 +126,6 @@ int ScanCommand::execute(const ParsedArgs& args)
 {
     AppConfig config = ConfigLoader::load();
     ParsedArgs effectiveArgs = args;
-    const bool activeOnly = std::find(effectiveArgs.targets.begin(), effectiveArgs.targets.end(), activeFilterToken) != effectiveArgs.targets.end();
-    effectiveArgs.targets.erase(std::remove(effectiveArgs.targets.begin(), effectiveArgs.targets.end(), activeFilterToken), effectiveArgs.targets.end());
 
     if (effectiveArgs.category.empty() && !config.defaultCategory.empty())
         effectiveArgs.category = config.defaultCategory;
@@ -140,7 +135,7 @@ int ScanCommand::execute(const ParsedArgs& args)
         std::cout << "Scanning...\n";
     auto results = engine.scan(effectiveArgs.targets, config);
     ScanHistory::getInstance().recordScan(results);
-    auto filtered = applyFiltersAndSort(results, effectiveArgs, activeOnly);
+    auto filtered = applyFiltersAndSort(results, effectiveArgs);
 
     uint64_t total = 0;
     for (const auto& result : filtered)
@@ -151,7 +146,7 @@ int ScanCommand::execute(const ParsedArgs& args)
         nlohmann::json payload = nlohmann::json::object();
         payload["command"] = "scan";
         payload["total_bytes"] = total;
-        payload["active_only"] = activeOnly;
+        payload["active_only"] = args.activeOnly;
 
         nlohmann::json caches = nlohmann::json::array();
         for (const auto& result : filtered)

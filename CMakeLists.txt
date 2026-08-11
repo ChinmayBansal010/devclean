@@ -54,11 +54,15 @@ add_executable(devclean_tests
 )
 
 add_executable(devclean_parser_tests
-    tests/parser_tests.cpp
+    tests/unit/argument_parser_tests.cpp
 )
 
 add_executable(devclean_formatter_tests
-    tests/formatter_tests.cpp
+    tests/unit/formatter_tests.cpp
+)
+
+add_executable(devclean_config_tests
+    tests/unit/config_tests.cpp
 )
 
 add_executable(devclean_benchmark
@@ -69,11 +73,13 @@ target_link_libraries(devclean PRIVATE devclean_core)
 target_link_libraries(devclean_tests PRIVATE devclean_core)
 target_link_libraries(devclean_parser_tests PRIVATE devclean_core)
 target_link_libraries(devclean_formatter_tests PRIVATE devclean_core)
+target_link_libraries(devclean_config_tests PRIVATE devclean_core)
 target_link_libraries(devclean_benchmark PRIVATE devclean_core)
 
-add_test(NAME devclean_cli_tests COMMAND devclean_tests)
-add_test(NAME devclean_parser_tests COMMAND devclean_parser_tests)
-add_test(NAME devclean_formatter_tests COMMAND devclean_formatter_tests)
+add_test(NAME devclean.integration.cli COMMAND devclean_tests)
+add_test(NAME devclean.unit.argument_parser COMMAND devclean_parser_tests)
+add_test(NAME devclean.unit.formatter COMMAND devclean_formatter_tests)
+add_test(NAME devclean.unit.config COMMAND devclean_config_tests)
 
 install(TARGETS devclean devclean_benchmark RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES docs/devclean.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
@@ -101,12 +107,12 @@ include(CPack)
 
 if(ENABLE_SANITIZERS)
     if(MSVC)
-        foreach(target devclean_core devclean devclean_tests devclean_parser_tests devclean_formatter_tests devclean_benchmark)
+        foreach(target devclean_core devclean devclean_tests devclean_parser_tests devclean_formatter_tests devclean_config_tests devclean_benchmark)
             target_compile_options(${target} PRIVATE /fsanitize=address /Zi)
             target_link_options(${target} PRIVATE /INCREMENTAL:NO /DEBUG /fsanitize=address)
         endforeach()
     else()
-        foreach(target devclean_core devclean devclean_tests devclean_parser_tests devclean_formatter_tests devclean_benchmark)
+        foreach(target devclean_core devclean devclean_tests devclean_parser_tests devclean_formatter_tests devclean_config_tests devclean_benchmark)
             target_compile_options(${target} PRIVATE
                 -fsanitize=address,undefined
                 -fno-omit-frame-pointer
@@ -123,26 +129,28 @@ if(MSVC)
     target_compile_options(devclean_tests PRIVATE /W4)
     target_compile_options(devclean_parser_tests PRIVATE /W4)
     target_compile_options(devclean_formatter_tests PRIVATE /W4)
+    target_compile_options(devclean_config_tests PRIVATE /W4)
     target_compile_options(devclean_benchmark PRIVATE /W4)
 else()
     target_compile_options(devclean PRIVATE -Wall -Wextra -Wpedantic)
     target_compile_options(devclean_tests PRIVATE -Wall -Wextra -Wpedantic)
     target_compile_options(devclean_parser_tests PRIVATE -Wall -Wextra -Wpedantic)
     target_compile_options(devclean_formatter_tests PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(devclean_config_tests PRIVATE -Wall -Wextra -Wpedantic)
     target_compile_options(devclean_benchmark PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 find_program(CLANG_FORMAT_EXECUTABLE NAMES clang-format)
 if(CLANG_FORMAT_EXECUTABLE)
     add_custom_target(format
-        COMMAND ${CLANG_FORMAT_EXECUTABLE} -i src/*.cpp src/*/*.cpp include/*.hpp include/*/*.hpp tests/*.cpp
+        COMMAND ${CLANG_FORMAT_EXECUTABLE} -i src/*.cpp src/*/*.cpp include/*.hpp include/*/*.hpp tests/*.cpp tests/unit/*.cpp
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 endif()
 
 find_program(CLANG_TIDY_EXECUTABLE NAMES clang-tidy)
 if(CLANG_TIDY_EXECUTABLE)
     add_custom_target(tidy
-        COMMAND ${CLANG_TIDY_EXECUTABLE} -p ${CMAKE_BINARY_DIR} src/main.cpp src/core/*.cpp src/commands/*.cpp src/scanner/*.cpp src/platform/*.cpp src/cleaner/*.cpp src/utils/*.cpp tests/cli_tests.cpp tests/parser_tests.cpp tests/formatter_tests.cpp
+        COMMAND ${CLANG_TIDY_EXECUTABLE} -p ${CMAKE_BINARY_DIR} src/main.cpp src/core/*.cpp src/commands/*.cpp src/scanner/*.cpp src/platform/*.cpp src/cleaner/*.cpp src/utils/*.cpp tests/cli_tests.cpp tests/unit/*.cpp
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 endif()
 

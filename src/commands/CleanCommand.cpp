@@ -14,6 +14,8 @@
 
 namespace {
 
+constexpr const char* activeFilterToken = "__active_only__";
+
 std::string normalize(const std::string& value)
 {
     std::string result = value;
@@ -33,9 +35,16 @@ std::string canonicalCategory(const std::string& value)
     return normalized;
 }
 
-std::vector<ScanResult> applyFilters(const std::vector<ScanResult>& input, const ParsedArgs& args)
+std::vector<ScanResult> applyFilters(const std::vector<ScanResult>& input, const ParsedArgs& args, bool activeOnly)
 {
     std::vector<ScanResult> results = input;
+
+    if (activeOnly)
+    {
+        results.erase(std::remove_if(results.begin(), results.end(), [](const ScanResult& result) {
+            return !result.active;
+        }), results.end());
+    }
 
     if (!args.category.empty())
     {
@@ -71,9 +80,7 @@ std::vector<ScanResult> selectCandidates(const std::vector<ScanResult>& candidat
 
     std::cout << "Select caches to delete:\n";
     for (std::size_t i = 0; i < candidates.size(); ++i)
-    {
         std::cout << "[ ] " << candidates[i].name << "\n";
-    }
     std::cout << "Enter names separated by spaces, or press Enter to delete all: ";
 
     std::string input;
@@ -113,13 +120,16 @@ int CleanCommand::execute(const ParsedArgs& args)
 {
     AppConfig config = ConfigLoader::load();
     ParsedArgs effectiveArgs = args;
+    const bool activeOnly = std::find(effectiveArgs.targets.begin(), effectiveArgs.targets.end(), activeFilterToken) != effectiveArgs.targets.end();
+    effectiveArgs.targets.erase(std::remove(effectiveArgs.targets.begin(), effectiveArgs.targets.end(), activeFilterToken), effectiveArgs.targets.end());
+
     if (effectiveArgs.category.empty() && !config.defaultCategory.empty())
         effectiveArgs.category = config.defaultCategory;
     ScannerEngine scanner;
     CleanEngine cleaner;
 
     auto results = scanner.scan(effectiveArgs.targets, config);
-    auto candidates = applyFilters(results, effectiveArgs);
+    auto candidates = applyFilters(results, effectiveArgs, activeOnly);
     candidates.erase(std::remove_if(candidates.begin(), candidates.end(), [](const ScanResult& result) {
         return !result.found;
     }), candidates.end());
@@ -136,7 +146,8 @@ int CleanCommand::execute(const ParsedArgs& args)
         payload["command"] = "clean";
         payload["dry_run"] = args.dryRun;
         payload["force"] = args.force;
-        payload["targets"] = args.targets;
+        payload["active_only"] = activeOnly;
+        payload["targets"] = effectiveArgs.targets;
         payload["caches"] = nlohmann::json::array();
         for (const auto& candidate : candidates)
         {
@@ -144,6 +155,7 @@ int CleanCommand::execute(const ParsedArgs& args)
             entry["name"] = candidate.name;
             entry["path"] = candidate.location.string();
             entry["bytes"] = candidate.bytes;
+            entry["active"] = candidate.active;
             payload["caches"].push_back(std::move(entry));
         }
         std::cout << payload.dump(2) << '\n';
@@ -190,7 +202,6 @@ int CleanCommand::execute(const ParsedArgs& args)
         std::cout << "\nProceed? [y/N]: ";
         char response = 'n';
         std::cin >> response;
-
         if (response != 'y' && response != 'Y')
         {
             std::cout << "Cancelled.\n";
@@ -205,9 +216,7 @@ int CleanCommand::execute(const ParsedArgs& args)
             std::cout << "Deleting... " << candidate.name << '\n';
         const auto cleanResult = cleaner.removeDirectory(candidate.location);
         if (cleanResult.success)
-        {
             std::cout << "[OK]   " << candidate.name << '\n';
-        }
         else
         {
             std::cout << "[SKIP] " << candidate.name << '\n';

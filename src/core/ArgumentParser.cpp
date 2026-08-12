@@ -26,6 +26,39 @@ bool hasValue(int index, int argc, char* argv[])
     return index + 1 < argc && !isOption(argv[index + 1]);
 }
 
+uint64_t parseSize(const std::string& value)
+{
+    const std::string normalized = normalize(value);
+    std::size_t suffixStart = 0;
+    while (suffixStart < normalized.size() && std::isdigit(static_cast<unsigned char>(normalized[suffixStart])))
+        ++suffixStart;
+
+    if (suffixStart == 0)
+        return 0;
+
+    uint64_t multiplier = 1;
+    const std::string suffix = normalized.substr(suffixStart);
+    if (suffix == "kb")
+        multiplier = 1024ULL;
+    else if (suffix == "mb")
+        multiplier = 1024ULL * 1024ULL;
+    else if (suffix == "gb")
+        multiplier = 1024ULL * 1024ULL * 1024ULL;
+    else if (suffix == "tb")
+        multiplier = 1024ULL * 1024ULL * 1024ULL * 1024ULL;
+    else if (!suffix.empty() && suffix != "b")
+        return 0;
+
+    try
+    {
+        return std::stoull(normalized.substr(0, suffixStart)) * multiplier;
+    }
+    catch (...)
+    {
+        return 0;
+    }
+}
+
 }
 
 ParsedArgs ArgumentParser::parse(int argc, char* argv[])
@@ -47,6 +80,11 @@ ParsedArgs ArgumentParser::parse(int argc, char* argv[])
             args.force = true;
         else if (token == "--active-only")
             args.activeOnly = true;
+        else if (token == "--min-size")
+        {
+            if (hasValue(i, argc, argv))
+                args.minSizeBytes = parseSize(argv[++i]);
+        }
         else if (token == "--help" || token == "-h")
             args.help = true;
         else if (token == "--category")

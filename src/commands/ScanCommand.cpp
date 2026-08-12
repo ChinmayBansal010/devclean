@@ -45,6 +45,13 @@ std::vector<ScanResult> applyFiltersAndSort(const std::vector<ScanResult>& input
         }), results.end());
     }
 
+    if (args.minSizeBytes > 0)
+    {
+        results.erase(std::remove_if(results.begin(), results.end(), [&](const ScanResult& result) {
+            return !result.found || result.bytes < args.minSizeBytes;
+        }), results.end());
+    }
+
     if (!args.category.empty())
     {
         const std::string category = canonicalCategory(args.category);
@@ -147,6 +154,7 @@ int ScanCommand::execute(const ParsedArgs& args)
         payload["command"] = "scan";
         payload["total_bytes"] = total;
         payload["active_only"] = args.activeOnly;
+        payload["min_size_bytes"] = args.minSizeBytes;
 
         nlohmann::json caches = nlohmann::json::array();
         for (const auto& result : filtered)

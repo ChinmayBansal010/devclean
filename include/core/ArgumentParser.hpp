@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -11,6 +12,7 @@ struct ParsedArgs
     std::string category;
     std::string sort = "name";
     std::string reportFormat;
+    uint64_t minSizeBytes = 0;
     bool activeOnly = false;
     bool reverse = false;
     bool json = false;

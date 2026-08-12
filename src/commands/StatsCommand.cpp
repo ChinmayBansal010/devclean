@@ -33,6 +33,23 @@ std::vector<CategoryStat> sortCategories(
     return categories;
 }
 
+void applyFilters(std::vector<ScanResult>& results, const ParsedArgs& args)
+{
+    if (args.activeOnly)
+    {
+        results.erase(std::remove_if(results.begin(), results.end(), [](const ScanResult& result) {
+            return !result.active;
+        }), results.end());
+    }
+
+    if (args.minSizeBytes > 0)
+    {
+        results.erase(std::remove_if(results.begin(), results.end(), [&](const ScanResult& result) {
+            return !result.found || result.bytes < args.minSizeBytes;
+        }), results.end());
+    }
+}
+
 }
 
 int StatsCommand::execute(const ParsedArgs& args)
@@ -40,6 +57,7 @@ int StatsCommand::execute(const ParsedArgs& args)
     AppConfig config = ConfigLoader::load();
     ScannerEngine scanner;
     auto results = scanner.scan(args.targets, config);
+    applyFilters(results, args);
 
     uint64_t totalBytes = 0;
     uint64_t totalFiles = 0;
@@ -83,6 +101,8 @@ int StatsCommand::execute(const ParsedArgs& args)
         payload["found_count"] = foundCount;
         payload["active_count"] = activeCount;
         payload["inactive_count"] = results.size() - activeCount;
+        payload["active_only"] = args.activeOnly;
+        payload["min_size_bytes"] = args.minSizeBytes;
         payload["total_bytes"] = totalBytes;
         payload["total_files"] = totalFiles;
         payload["total_directories"] = totalDirectories;

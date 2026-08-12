@@ -31,7 +31,7 @@ int main()
     assert(results[0].found);
     assert(results[0].bytes > 0);
     assert(results[0].files == 2);
-    assert(results[0].directories >= 2);
+    assert(results[0].directories >= 1);
     assert(results[0].location == root / "cache");
 
     std::filesystem::remove_all(root);

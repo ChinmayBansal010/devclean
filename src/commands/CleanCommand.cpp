@@ -50,6 +50,13 @@ std::vector<ScanResult> applyFilters(const std::vector<ScanResult>& input, const
         }), results.end());
     }
 
+    if (args.minSizeBytes > 0)
+    {
+        results.erase(std::remove_if(results.begin(), results.end(), [&](const ScanResult& result) {
+            return !result.found || result.bytes < args.minSizeBytes;
+        }), results.end());
+    }
+
     if (!args.category.empty())
     {
         const std::string category = canonicalCategory(args.category);
@@ -67,6 +74,28 @@ std::vector<ScanResult> applyFilters(const std::vector<ScanResult>& input, const
             });
         }), results.end());
     }
+
+    if (args.sort == "size")
+    {
+        std::stable_sort(results.begin(), results.end(), [](const auto& lhs, const auto& rhs) {
+            return lhs.bytes < rhs.bytes;
+        });
+    }
+    else if (args.sort == "modified")
+    {
+        std::stable_sort(results.begin(), results.end(), [](const auto& lhs, const auto& rhs) {
+            return lhs.modified < rhs.modified;
+        });
+    }
+    else
+    {
+        std::stable_sort(results.begin(), results.end(), [](const auto& lhs, const auto& rhs) {
+            return lhs.name < rhs.name;
+        });
+    }
+
+    if (args.reverse)
+        std::reverse(results.begin(), results.end());
 
     return results;
 }
@@ -153,6 +182,7 @@ int CleanCommand::execute(const ParsedArgs& args)
         payload["dry_run"] = args.dryRun;
         payload["force"] = args.force;
         payload["active_only"] = args.activeOnly;
+        payload["min_size_bytes"] = args.minSizeBytes;
         payload["targets"] = effectiveArgs.targets;
         payload["caches"] = nlohmann::json::array();
         for (const auto& candidate : candidates)

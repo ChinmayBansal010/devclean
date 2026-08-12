@@ -60,6 +60,32 @@ int main()
     {
         char* argv[] = {
             const_cast<char*>("devclean"),
+            const_cast<char*>("scan"),
+            const_cast<char*>("--min-size"),
+            const_cast<char*>("250MB"),
+            const_cast<char*>("--min-size"),
+            const_cast<char*>("2GB")
+        };
+
+        const ParsedArgs args = ArgumentParser::parse(6, argv);
+        assert(args.minSizeBytes == 2ULL * 1024ULL * 1024ULL * 1024ULL);
+    }
+
+    {
+        char* argv[] = {
+            const_cast<char*>("devclean"),
+            const_cast<char*>("scan"),
+            const_cast<char*>("--min-size"),
+            const_cast<char*>("512KB")
+        };
+
+        const ParsedArgs args = ArgumentParser::parse(4, argv);
+        assert(args.minSizeBytes == 512ULL * 1024ULL);
+    }
+
+    {
+        char* argv[] = {
+            const_cast<char*>("devclean"),
             const_cast<char*>("clean"),
             const_cast<char*>("--exclude"),
             const_cast<char*>("NPM"),

@@ -62,6 +62,23 @@ int64_t ageInDays(const ScanResult& result)
     return std::chrono::duration_cast<std::chrono::hours>(result.age).count() / 24;
 }
 
+void applyFilters(std::vector<ScanResult>& results, const ParsedArgs& args)
+{
+    if (args.activeOnly)
+    {
+        results.erase(std::remove_if(results.begin(), results.end(), [](const ScanResult& result) {
+            return !result.active;
+        }), results.end());
+    }
+
+    if (args.minSizeBytes > 0)
+    {
+        results.erase(std::remove_if(results.begin(), results.end(), [&](const ScanResult& result) {
+            return !result.found || result.bytes < args.minSizeBytes;
+        }), results.end());
+    }
+}
+
 AnalysisData buildAnalysis(const std::vector<ScanResult>& results)
 {
     AnalysisData data;
@@ -117,26 +134,21 @@ AnalysisData buildAnalysis(const std::vector<ScanResult>& results)
 void printMarkdownReport(const AnalysisData& data)
 {
     std::cout << "# devclean analysis\n\n";
-
     std::cout << "## Largest folders\n";
     for (const auto& [name, bytes] : data.largestFolders)
         std::cout << "- " << name << " - " << Formatter::formatBytes(bytes) << "\n";
-
     std::cout << "\n## Largest file types\n";
     for (const auto& [type, bytes] : data.fileTypeBytes)
         std::cout << "- " << type << " - " << Formatter::formatBytes(bytes) << "\n";
-
     std::cout << "\n## Cache age\n";
     for (const auto& [name, days] : data.ages)
         std::cout << "- " << name << " - " << days << " days\n";
-
     std::cout << "\n## Growth\n";
     for (const auto& [name, growth] : data.growth)
     {
         const std::string sign = growth >= 0 ? "+" : "-";
         std::cout << "- " << name << " - " << sign << Formatter::formatBytes(static_cast<uint64_t>(growth >= 0 ? growth : -growth)) << "\n";
     }
-
     std::cout << "\n## Recommendations\n";
     if (!data.safeCaches.empty())
     {
@@ -217,37 +229,23 @@ void printCsvReport(const AnalysisData& data)
 void printJsonReport(const AnalysisData& data)
 {
     nlohmann::json payload = nlohmann::json::object();
-
     payload["largest_folders"] = nlohmann::json::array();
     for (const auto& [name, bytes] : data.largestFolders)
-    {
         payload["largest_folders"].push_back({{"name", name}, {"bytes", bytes}});
-    }
-
     payload["largest_file_types"] = nlohmann::json::array();
     for (const auto& [type, bytes] : data.fileTypeBytes)
-    {
         payload["largest_file_types"].push_back({{"name", type}, {"bytes", bytes}});
-    }
-
     payload["cache_age"] = nlohmann::json::array();
     for (const auto& [name, days] : data.ages)
-    {
         payload["cache_age"].push_back({{"name", name}, {"days", days}});
-    }
-
     payload["growth"] = nlohmann::json::array();
     for (const auto& [name, growth] : data.growth)
-    {
         payload["growth"].push_back({{"name", name}, {"bytes", growth}});
-    }
-
     payload["recommendations"] = nlohmann::json::object();
     payload["recommendations"]["safe"] = data.safeCaches;
     payload["recommendations"]["large"] = data.largeCaches;
     payload["recommendations"]["unused"] = data.unusedCaches;
     payload["recommendations"]["old"] = data.oldCaches;
-
     std::cout << payload.dump(2) << '\n';
 }
 
@@ -258,6 +256,7 @@ int AnalyzeCommand::execute(const ParsedArgs& args)
     AppConfig config = ConfigLoader::load();
     ScannerEngine engine;
     auto results = engine.scan(args.targets, config);
+    applyFilters(results, args);
     ScanHistory::getInstance().recordScan(results);
     auto analysis = buildAnalysis(results);
 
@@ -279,38 +278,27 @@ int AnalyzeCommand::execute(const ParsedArgs& args)
 
     std::cout << "\nAnalysis\n";
     std::cout << "--------\n";
-
     std::cout << "Largest folders:\n";
     for (std::size_t i = 0; i < std::min<std::size_t>(analysis.largestFolders.size(), 8); ++i)
         std::cout << "- " << analysis.largestFolders[i].first << " : " << Formatter::formatBytes(analysis.largestFolders[i].second) << '\n';
-
     std::cout << "\nLargest file types:\n";
     for (const auto& [type, bytes] : analysis.fileTypeBytes)
         std::cout << "- " << type << " : " << Formatter::formatBytes(bytes) << '\n';
-
     std::cout << "\nCache age:\n";
     for (std::size_t i = 0; i < std::min<std::size_t>(analysis.ages.size(), 8); ++i)
         std::cout << "- " << analysis.ages[i].first << " : " << analysis.ages[i].second << " days\n";
-
     std::cout << "\nGrowth:\n";
     if (analysis.growth.empty())
-    {
         std::cout << "- no historical growth data available yet\n";
-    }
     else
-    {
         for (const auto& [name, growth] : analysis.growth)
         {
             const std::string sign = growth >= 0 ? "+" : "-";
             std::cout << "- " << name << " : " << sign << Formatter::formatBytes(static_cast<uint64_t>(growth >= 0 ? growth : -growth)) << '\n';
         }
-    }
-
     std::cout << "\nRecommendations:\n";
     if (analysis.safeCaches.empty() && analysis.largeCaches.empty() && analysis.unusedCaches.empty() && analysis.oldCaches.empty())
-    {
         std::cout << "- no recommendations at this time\n";
-    }
     else
     {
         if (!analysis.safeCaches.empty())

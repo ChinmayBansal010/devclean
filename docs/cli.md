@@ -14,38 +14,45 @@ Targets can be cache names or aliases. When no target is supplied, the command u
 devclean scan
 devclean scan python cargo
 devclean scan --category python
+devclean scan --active-only
+devclean scan --min-size 250MB
 devclean scan --sort size --reverse
 devclean scan --exclude npm --exclude yarn
 devclean scan --json
 ```
 
-`scan` resolves configured cache locations, reports discovered size and file counts, records a scan snapshot, and applies category/exclusion/sort filters to the displayed results.
+`scan` resolves configured cache locations, reports discovered size and file counts, records a scan snapshot, and applies category, activity, size, exclusion, and sort filters to the displayed results.
+
+`--min-size` accepts whole-byte values and binary units such as `512KB`, `250MB`, `2GB`, and `1TB`. Only found caches at or above the threshold are included.
 
 ## Analyze
 
 ```bash
 devclean analyze
-devclean analyze --report json
+devclean analyze --active-only
+devclean analyze --min-size 250MB --report json
 devclean analyze --report markdown
 ```
 
-Use `--report` when the output needs to be consumed by another tool or saved as documentation.
+Use `--report` when the output needs to be consumed by another tool or saved as documentation. Analysis respects the same activity and minimum-size filters as scanning.
 
 ## Statistics
 
 ```bash
 devclean stats
+devclean stats --active-only --min-size 1GB
 devclean stats --json
 ```
 
-`stats` summarizes total disk usage, files, directories, largest caches, and category totals.
+`stats` summarizes total disk usage, files, directories, largest caches, and category totals for the selected cache set.
 
 ## Cleanup
 
 ```bash
 devclean clean --dry-run
 devclean clean --dry-run python
-devclean clean --force --exclude npm
+devclean clean --dry-run --min-size 500MB --sort size --reverse
+devclean clean --force --active-only --exclude npm
 ```
 
 Use `--dry-run` before destructive cleanup. `--force` bypasses interactive confirmation where the command permits it. Protected locations remain blocked by the safety layer.
@@ -56,7 +63,9 @@ Use `--dry-run` before destructive cleanup. `--force` bypasses interactive confi
 | --- | --- |
 | `--category <name>` | Filter by cache category |
 | `--exclude <name>` | Exclude a cache from the operation |
-| `--sort <name>` | Sort scan output by name, size, or modification time |
+| `--active-only` | Include only caches associated with installed/active tools |
+| `--min-size <size>` | Include only found caches at or above a size threshold |
+| `--sort <name>` | Sort output by name, size, or modification time |
 | `--reverse` | Reverse the selected sort order |
 | `--json` | Emit machine-readable JSON |
 | `--verbose` | Show additional operation progress |

@@ -30,6 +30,9 @@ struct AnalysisData
     std::vector<std::string> largeCaches;
     std::vector<std::string> unusedCaches;
     std::vector<std::string> oldCaches;
+    bool activeOnly = false;
+    uint64_t minSizeBytes = 0;
+    uint64_t maxSizeBytes = 0;
 };
 
 std::string normalize(std::string value)
@@ -86,10 +89,13 @@ void applyFilters(std::vector<ScanResult>& results, const ParsedArgs& args)
     }
 }
 
-AnalysisData buildAnalysis(const std::vector<ScanResult>& results)
+AnalysisData buildAnalysis(const std::vector<ScanResult>& results, const ParsedArgs& args)
 {
     AnalysisData data;
     data.results = results;
+    data.activeOnly = args.activeOnly;
+    data.minSizeBytes = args.minSizeBytes;
+    data.maxSizeBytes = args.maxSizeBytes;
 
     ToolDetector& detector = ToolDetector::getInstance();
     for (const auto& result : results)
@@ -141,6 +147,10 @@ AnalysisData buildAnalysis(const std::vector<ScanResult>& results)
 void printMarkdownReport(const AnalysisData& data)
 {
     std::cout << "# devclean analysis\n\n";
+    std::cout << "## Filters\n";
+    std::cout << "- active-only: " << (data.activeOnly ? "true" : "false") << "\n";
+    std::cout << "- minimum size: " << (data.minSizeBytes > 0 ? Formatter::formatBytes(data.minSizeBytes) : "none") << "\n";
+    std::cout << "- maximum size: " << (data.maxSizeBytes > 0 ? Formatter::formatBytes(data.maxSizeBytes) : "none") << "\n\n";
     std::cout << "## Largest folders\n";
     for (const auto& [name, bytes] : data.largestFolders)
         std::cout << "- " << name << " - " << Formatter::formatBytes(bytes) << "\n";
@@ -206,7 +216,11 @@ void printMarkdownReport(const AnalysisData& data)
 void printHtmlReport(const AnalysisData& data)
 {
     std::cout << "<html><body><h1>devclean analysis</h1>";
-    std::cout << "<h2>Largest folders</h2><ul>";
+    std::cout << "<h2>Filters</h2><ul>";
+    std::cout << "<li>Active-only: " << (data.activeOnly ? "true" : "false") << "</li>";
+    std::cout << "<li>Minimum size: " << (data.minSizeBytes > 0 ? Formatter::formatBytes(data.minSizeBytes) : "none") << "</li>";
+    std::cout << "<li>Maximum size: " << (data.maxSizeBytes > 0 ? Formatter::formatBytes(data.maxSizeBytes) : "none") << "</li>";
+    std::cout << "</ul><h2>Largest folders</h2><ul>";
     for (const auto& [name, bytes] : data.largestFolders)
         std::cout << "<li>" << name << " - " << Formatter::formatBytes(bytes) << "</li>";
     std::cout << "</ul><h2>Largest file types</h2><ul>";
@@ -225,6 +239,9 @@ void printHtmlReport(const AnalysisData& data)
 void printCsvReport(const AnalysisData& data)
 {
     std::cout << "section,name,value\n";
+    std::cout << "filter,active_only," << (data.activeOnly ? "true" : "false") << '\n';
+    std::cout << "filter,min_size_bytes," << data.minSizeBytes << '\n';
+    std::cout << "filter,max_size_bytes," << data.maxSizeBytes << '\n';
     for (const auto& [name, bytes] : data.largestFolders)
         std::cout << "largest_folder," << escapeCsv(name) << ',' << bytes << '\n';
     for (const auto& [type, bytes] : data.fileTypeBytes)
@@ -236,6 +253,11 @@ void printCsvReport(const AnalysisData& data)
 void printJsonReport(const AnalysisData& data)
 {
     nlohmann::json payload = nlohmann::json::object();
+    payload["filters"] = {
+        {"active_only", data.activeOnly},
+        {"min_size_bytes", data.minSizeBytes},
+        {"max_size_bytes", data.maxSizeBytes}
+    };
     payload["largest_folders"] = nlohmann::json::array();
     for (const auto& [name, bytes] : data.largestFolders)
         payload["largest_folders"].push_back({{"name", name}, {"bytes", bytes}});
@@ -265,7 +287,7 @@ int AnalyzeCommand::execute(const ParsedArgs& args)
     auto results = engine.scan(args.targets, config);
     applyFilters(results, args);
     ScanHistory::getInstance().recordScan(results);
-    auto analysis = buildAnalysis(results);
+    auto analysis = buildAnalysis(results, args);
 
     if (!args.reportFormat.empty())
     {
@@ -285,6 +307,32 @@ int AnalyzeCommand::execute(const ParsedArgs& args)
 
     std::cout << "\nAnalysis\n";
     std::cout << "--------\n";
+    std::cout << "Filters: ";
+    if (!args.activeOnly && args.minSizeBytes == 0 && args.maxSizeBytes == 0)
+        std::cout << "none\n";
+    else
+    {
+        bool needsSeparator = false;
+        if (args.activeOnly)
+        {
+            std::cout << "active-only";
+            needsSeparator = true;
+        }
+        if (args.minSizeBytes > 0)
+        {
+            if (needsSeparator)
+                std::cout << ", ";
+            std::cout << "min=" << Formatter::formatBytes(args.minSizeBytes);
+            needsSeparator = true;
+        }
+        if (args.maxSizeBytes > 0)
+        {
+            if (needsSeparator)
+                std::cout << ", ";
+            std::cout << "max=" << Formatter::formatBytes(args.maxSizeBytes);
+        }
+        std::cout << '\n';
+    }
     std::cout << "Largest folders:\n";
     for (std::size_t i = 0; i < std::min<std::size_t>(analysis.largestFolders.size(), 8); ++i)
         std::cout << "- " << analysis.largestFolders[i].first << " : " << Formatter::formatBytes(analysis.largestFolders[i].second) << '\n';

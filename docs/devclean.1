@@ -21,6 +21,15 @@ Delete selected caches.
 Show aggregate cache statistics.
 .SH OPTIONS
 .TP
+.B --active-only
+Include only caches associated with active tools.
+.TP
+.B --min-size size
+Include only found caches at or above the specified size. Supports B, KB, MB, GB, and TB.
+.TP
+.B --max-size size
+Include only found caches at or below the specified size. Supports B, KB, MB, GB, and TB.
+.TP
 .B --report markdown|html|csv|json
 Emit a report in the requested format.
 .TP
@@ -31,8 +40,14 @@ Show what would be removed without deleting anything.
 .B devclean scan --category python
 Scan Python-related caches.
 .TP
+.B devclean scan --min-size 250MB --max-size 2GB
+Show caches inside an inclusive size range.
+.TP
 .B devclean analyze --report markdown
 Generate a markdown analysis report with recommendations.
+.TP
+.B devclean clean --dry-run --min-size 500MB --max-size 2GB
+Preview cleanup for caches inside an inclusive size range.
 .TP
 .B devclean clean --dry-run --exclude npm
 Preview cleanup without deleting anything.

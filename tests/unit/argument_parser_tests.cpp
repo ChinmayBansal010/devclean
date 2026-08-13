@@ -1,6 +1,8 @@
 #include "core/ArgumentParser.hpp"
 
 #include <cassert>
+#include <cstdint>
+#include <limits>
 
 int main()
 {
@@ -95,6 +97,18 @@ int main()
 
         const ParsedArgs args = ArgumentParser::parse(4, argv);
         assert(args.maxSizeBytes == 128ULL * 1024ULL * 1024ULL);
+    }
+
+    {
+        char* argv[] = {
+            const_cast<char*>("devclean"),
+            const_cast<char*>("scan"),
+            const_cast<char*>("--max-size"),
+            const_cast<char*>("18446744073709551615TB")
+        };
+
+        const ParsedArgs args = ArgumentParser::parse(4, argv);
+        assert(args.maxSizeBytes == 0);
     }
 
     {

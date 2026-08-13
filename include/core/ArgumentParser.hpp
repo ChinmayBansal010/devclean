@@ -13,6 +13,7 @@ struct ParsedArgs
     std::string sort = "name";
     std::string reportFormat;
     uint64_t minSizeBytes = 0;
+    uint64_t maxSizeBytes = 0;
     bool activeOnly = false;
     bool reverse = false;
     bool json = false;

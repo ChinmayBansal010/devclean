@@ -21,7 +21,7 @@ _devclean() {
             ;;
     esac
 
-    COMPREPLY=( $(compgen -W "scan analyze clean stats version --help --json --verbose --dry-run --force --active-only --category --exclude --sort --reverse --min-size --max-size --report" -- "$cur") )
+    COMPREPLY=( $(compgen -W "scan analyze clean stats version --help -h --version -V --json --verbose --dry-run --force --active-only --category --exclude --sort --reverse --min-size --max-size --report" -- "$cur") )
 }
 
 complete -F _devclean devclean

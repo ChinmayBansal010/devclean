@@ -19,7 +19,7 @@ std::string normalize(const std::string& value)
 
 bool isOption(const std::string& token)
 {
-    return token.rfind("--", 0) == 0;
+    return token.rfind("--", 0) == 0 || token == "-h" || token == "-V";
 }
 
 bool hasValue(int index, int argc, char* argv[])
@@ -96,6 +96,8 @@ ParsedArgs ArgumentParser::parse(int argc, char* argv[])
         }
         else if (token == "--help" || token == "-h")
             args.help = true;
+        else if (token == "--version" || token == "-V")
+            args.version = true;
         else if (token == "--category")
         {
             if (hasValue(i, argc, argv))

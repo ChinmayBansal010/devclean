@@ -21,6 +21,7 @@ struct ParsedArgs
     bool dryRun = false;
     bool force = false;
     bool help = false;
+    bool version = false;
 };
 
 class ArgumentParser

@@ -57,6 +57,13 @@ std::vector<ScanResult> applyFilters(const std::vector<ScanResult>& input, const
         }), results.end());
     }
 
+    if (args.maxSizeBytes > 0)
+    {
+        results.erase(std::remove_if(results.begin(), results.end(), [&](const ScanResult& result) {
+            return !result.found || result.bytes > args.maxSizeBytes;
+        }), results.end());
+    }
+
     if (!args.category.empty())
     {
         const std::string category = canonicalCategory(args.category);
@@ -183,6 +190,7 @@ int CleanCommand::execute(const ParsedArgs& args)
         payload["force"] = args.force;
         payload["active_only"] = args.activeOnly;
         payload["min_size_bytes"] = args.minSizeBytes;
+        payload["max_size_bytes"] = args.maxSizeBytes;
         payload["targets"] = effectiveArgs.targets;
         payload["caches"] = nlohmann::json::array();
         for (const auto& candidate : candidates)

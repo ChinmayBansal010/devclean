@@ -85,6 +85,11 @@ ParsedArgs ArgumentParser::parse(int argc, char* argv[])
             if (hasValue(i, argc, argv))
                 args.minSizeBytes = parseSize(argv[++i]);
         }
+        else if (token == "--max-size")
+        {
+            if (hasValue(i, argc, argv))
+                args.maxSizeBytes = parseSize(argv[++i]);
+        }
         else if (token == "--help" || token == "-h")
             args.help = true;
         else if (token == "--category")

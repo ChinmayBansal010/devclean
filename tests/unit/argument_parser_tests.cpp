@@ -1,6 +1,5 @@
 #include "core/ArgumentParser.hpp"
 
-#include <algorithm>
 #include <cassert>
 
 int main()
@@ -76,11 +75,26 @@ int main()
             const_cast<char*>("devclean"),
             const_cast<char*>("scan"),
             const_cast<char*>("--min-size"),
-            const_cast<char*>("512KB")
+            const_cast<char*>("512KB"),
+            const_cast<char*>("--max-size"),
+            const_cast<char*>("4GB")
+        };
+
+        const ParsedArgs args = ArgumentParser::parse(6, argv);
+        assert(args.minSizeBytes == 512ULL * 1024ULL);
+        assert(args.maxSizeBytes == 4ULL * 1024ULL * 1024ULL * 1024ULL);
+    }
+
+    {
+        char* argv[] = {
+            const_cast<char*>("devclean"),
+            const_cast<char*>("clean"),
+            const_cast<char*>("--max-size"),
+            const_cast<char*>("128MB")
         };
 
         const ParsedArgs args = ArgumentParser::parse(4, argv);
-        assert(args.minSizeBytes == 512ULL * 1024ULL);
+        assert(args.maxSizeBytes == 128ULL * 1024ULL * 1024ULL);
     }
 
     {

@@ -27,6 +27,28 @@ int main()
     {
         char* argv[] = {
             const_cast<char*>("devclean"),
+            const_cast<char*>("--version")
+        };
+
+        const ParsedArgs args = ArgumentParser::parse(2, argv);
+        assert(args.version);
+        assert(args.command.empty());
+    }
+
+    {
+        char* argv[] = {
+            const_cast<char*>("devclean"),
+            const_cast<char*>("-V")
+        };
+
+        const ParsedArgs args = ArgumentParser::parse(2, argv);
+        assert(args.version);
+        assert(args.command.empty());
+    }
+
+    {
+        char* argv[] = {
+            const_cast<char*>("devclean"),
             const_cast<char*>("scan"),
             const_cast<char*>("--category"),
             const_cast<char*>("--json"),

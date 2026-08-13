@@ -8,6 +8,18 @@ devclean <command> [targets...] [options]
 
 Targets can be cache names or aliases. When no target is supplied, the command uses the configured cache catalog.
 
+## Version and help
+
+```bash
+devclean version
+devclean --version
+devclean -V
+devclean --help
+devclean -h
+```
+
+`--version` and `-V` print the installed version without requiring a command. `--help` and `-h` display the command reference.
+
 ## Scan
 
 ```bash
@@ -75,6 +87,7 @@ Use `--dry-run` before destructive cleanup. `--force` bypasses interactive confi
 | `--dry-run` | Preview cleanup without deleting data |
 | `--force` | Skip interactive cleanup confirmation |
 | `--help`, `-h` | Show command help |
+| `--version`, `-V` | Print the current version |
 
 ## Configuration
 

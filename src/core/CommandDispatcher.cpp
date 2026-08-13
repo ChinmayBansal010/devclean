@@ -30,17 +30,21 @@ void printHelp()
     std::cout << "  --verbose           Include additional details\n";
     std::cout << "  --dry-run           Show what would be removed\n";
     std::cout << "  --force             Skip confirmation prompts\n";
+    std::cout << "  --active-only       Include only caches associated with active tools\n";
+    std::cout << "  --min-size <size>   Include caches at or above a size threshold\n";
+    std::cout << "  --max-size <size>   Include caches at or below a size threshold\n";
     std::cout << "  --category <name>   Filter by cache category\n";
     std::cout << "  --exclude <name>    Exclude a cache by name/alias\n";
     std::cout << "  --sort <name|size|modified>  Sort results\n";
     std::cout << "  --reverse           Reverse the current sort order\n";
     std::cout << "  --report <markdown|html|csv|json>  Emit a report in the requested format\n";
-    std::cout << "  --help              Show this help message\n";
+    std::cout << "  --help, -h          Show this help message\n";
+    std::cout << "  --version, -V       Print the current version\n";
     std::cout << "\nExamples:\n";
     std::cout << "  devclean scan\n";
+    std::cout << "  devclean scan --min-size 250MB --max-size 2GB\n";
     std::cout << "  devclean analyze --report markdown\n";
     std::cout << "  devclean clean --dry-run --exclude npm\n";
-    std::cout << "  devclean analyze --category build --report json\n";
     std::cout << "  devclean stats --json\n";
 }
 
@@ -50,10 +54,16 @@ int CommandDispatcher::dispatch(int argc, char* argv[])
 {
     const ParsedArgs args = ArgumentParser::parse(argc, argv);
 
+    if (args.version)
+    {
+        VersionCommand command;
+        return command.execute(args);
+    }
+
     if (args.command.empty() || args.help)
     {
         printHelp();
-        return args.help ? 0 : 0;
+        return 0;
     }
 
     if (args.command == "scan")

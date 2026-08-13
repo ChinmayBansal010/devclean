@@ -16,6 +16,8 @@ devclean scan python cargo
 devclean scan --category python
 devclean scan --active-only
 devclean scan --min-size 250MB
+devclean scan --max-size 2GB
+devclean scan --min-size 250MB --max-size 2GB
 devclean scan --sort size --reverse
 devclean scan --exclude npm --exclude yarn
 devclean scan --json
@@ -23,24 +25,24 @@ devclean scan --json
 
 `scan` resolves configured cache locations, reports discovered size and file counts, records a scan snapshot, and applies category, activity, size, exclusion, and sort filters to the displayed results.
 
-`--min-size` accepts whole-byte values and binary units such as `512KB`, `250MB`, `2GB`, and `1TB`. Only found caches at or above the threshold are included.
+`--min-size` and `--max-size` accept whole-byte values and binary units such as `512KB`, `250MB`, `2GB`, and `1TB`. When both are supplied, only found caches inside the inclusive size range are included.
 
 ## Analyze
 
 ```bash
 devclean analyze
 devclean analyze --active-only
-devclean analyze --min-size 250MB --report json
+devclean analyze --min-size 250MB --max-size 2GB --report json
 devclean analyze --report markdown
 ```
 
-Use `--report` when the output needs to be consumed by another tool or saved as documentation. Analysis respects the same activity and minimum-size filters as scanning.
+Use `--report` when the output needs to be consumed by another tool or saved as documentation. Analysis respects the same activity and size-range filters as scanning.
 
 ## Statistics
 
 ```bash
 devclean stats
-devclean stats --active-only --min-size 1GB
+devclean stats --active-only --min-size 1GB --max-size 4GB
 devclean stats --json
 ```
 
@@ -51,7 +53,7 @@ devclean stats --json
 ```bash
 devclean clean --dry-run
 devclean clean --dry-run python
-devclean clean --dry-run --min-size 500MB --sort size --reverse
+devclean clean --dry-run --min-size 500MB --max-size 2GB --sort size --reverse
 devclean clean --force --active-only --exclude npm
 ```
 
@@ -65,6 +67,7 @@ Use `--dry-run` before destructive cleanup. `--force` bypasses interactive confi
 | `--exclude <name>` | Exclude a cache from the operation |
 | `--active-only` | Include only caches associated with installed/active tools |
 | `--min-size <size>` | Include only found caches at or above a size threshold |
+| `--max-size <size>` | Include only found caches at or below a size threshold |
 | `--sort <name>` | Sort output by name, size, or modification time |
 | `--reverse` | Reverse the selected sort order |
 | `--json` | Emit machine-readable JSON |

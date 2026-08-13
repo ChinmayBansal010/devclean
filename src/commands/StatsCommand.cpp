@@ -137,6 +137,32 @@ int StatsCommand::execute(const ParsedArgs& args)
 
     std::cout << "Statistics\n";
     std::cout << "----------\n";
+    std::cout << "Filters: ";
+    if (!args.activeOnly && args.minSizeBytes == 0 && args.maxSizeBytes == 0)
+        std::cout << "none\n";
+    else
+    {
+        bool needsSeparator = false;
+        if (args.activeOnly)
+        {
+            std::cout << "active-only";
+            needsSeparator = true;
+        }
+        if (args.minSizeBytes > 0)
+        {
+            if (needsSeparator)
+                std::cout << ", ";
+            std::cout << "min=" << Formatter::formatBytes(args.minSizeBytes);
+            needsSeparator = true;
+        }
+        if (args.maxSizeBytes > 0)
+        {
+            if (needsSeparator)
+                std::cout << ", ";
+            std::cout << "max=" << Formatter::formatBytes(args.maxSizeBytes);
+        }
+        std::cout << '\n';
+    }
     std::cout << "Caches scanned: " << results.size() << '\n';
     std::cout << "Caches found: " << foundCount << '\n';
     std::cout << "Active tools: " << activeCount << '\n';

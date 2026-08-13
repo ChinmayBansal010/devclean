@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -51,7 +52,10 @@ uint64_t parseSize(const std::string& value)
 
     try
     {
-        return std::stoull(normalized.substr(0, suffixStart)) * multiplier;
+        const uint64_t base = std::stoull(normalized.substr(0, suffixStart));
+        if (base > std::numeric_limits<uint64_t>::max() / multiplier)
+            return 0;
+        return base * multiplier;
     }
     catch (...)
     {

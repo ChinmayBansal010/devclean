@@ -48,6 +48,13 @@ void applyFilters(std::vector<ScanResult>& results, const ParsedArgs& args)
             return !result.found || result.bytes < args.minSizeBytes;
         }), results.end());
     }
+
+    if (args.maxSizeBytes > 0)
+    {
+        results.erase(std::remove_if(results.begin(), results.end(), [&](const ScanResult& result) {
+            return !result.found || result.bytes > args.maxSizeBytes;
+        }), results.end());
+    }
 }
 
 }
@@ -103,6 +110,7 @@ int StatsCommand::execute(const ParsedArgs& args)
         payload["inactive_count"] = results.size() - activeCount;
         payload["active_only"] = args.activeOnly;
         payload["min_size_bytes"] = args.minSizeBytes;
+        payload["max_size_bytes"] = args.maxSizeBytes;
         payload["total_bytes"] = totalBytes;
         payload["total_files"] = totalFiles;
         payload["total_directories"] = totalDirectories;

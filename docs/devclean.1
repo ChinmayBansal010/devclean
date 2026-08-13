@@ -19,7 +19,16 @@ Delete selected caches.
 .TP
 .B stats
 Show aggregate cache statistics.
+.TP
+.B version
+Print the installed version.
 .SH OPTIONS
+.TP
+.B --version, -V
+Print the installed version without requiring a command.
+.TP
+.B --help, -h
+Show the command and option reference.
 .TP
 .B --active-only
 Include only caches associated with active tools.
@@ -36,6 +45,9 @@ Emit a report in the requested format.
 .B --dry-run
 Show what would be removed without deleting anything.
 .SH EXAMPLES
+.TP
+.B devclean --version
+Print the installed version.
 .TP
 .B devclean scan --category python
 Scan Python-related caches.

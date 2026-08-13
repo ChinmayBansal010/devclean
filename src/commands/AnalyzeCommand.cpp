@@ -77,6 +77,13 @@ void applyFilters(std::vector<ScanResult>& results, const ParsedArgs& args)
             return !result.found || result.bytes < args.minSizeBytes;
         }), results.end());
     }
+
+    if (args.maxSizeBytes > 0)
+    {
+        results.erase(std::remove_if(results.begin(), results.end(), [&](const ScanResult& result) {
+            return !result.found || result.bytes > args.maxSizeBytes;
+        }), results.end());
+    }
 }
 
 AnalysisData buildAnalysis(const std::vector<ScanResult>& results)

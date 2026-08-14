@@ -15,15 +15,6 @@ using json = nlohmann::json;
 
 namespace {
 
-std::string trim(const std::string& value)
-{
-    const std::size_t begin = value.find_first_not_of(" \t\r\n");
-    if (begin == std::string::npos)
-        return {};
-    const std::size_t end = value.find_last_not_of(" \t\r\n");
-    return value.substr(begin, end - begin + 1);
-}
-
 std::vector<std::string> readStringArray(const json& source, const std::string& key)
 {
     std::vector<std::string> values;

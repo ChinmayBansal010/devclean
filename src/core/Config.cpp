@@ -8,7 +8,6 @@
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -23,20 +22,6 @@ std::string trim(const std::string& value)
         return {};
     const std::size_t end = value.find_last_not_of(" \t\r\n");
     return value.substr(begin, end - begin + 1);
-}
-
-std::vector<std::string> splitList(const std::string& value)
-{
-    std::vector<std::string> result;
-    std::stringstream stream(value);
-    std::string item;
-    while (std::getline(stream, item, ','))
-    {
-        auto trimmed = trim(item);
-        if (!trimmed.empty())
-            result.push_back(trimmed);
-    }
-    return result;
 }
 
 std::vector<std::string> readStringArray(const json& source, const std::string& key)

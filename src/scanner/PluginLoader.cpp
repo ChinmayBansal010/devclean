@@ -119,7 +119,7 @@ void PluginLoader::loadPluginsFromDirectory(
 }
 
 CacheDefinition PluginLoader::parsePluginJson(
-    const std::string& jsonContent, const std::filesystem::path& filePath)
+    const std::string& jsonContent, const std::filesystem::path&)
 {
     json j = json::parse(jsonContent);
 

@@ -268,7 +268,7 @@ jobs:
           \( -name "*.zip" -o -name "*.tar.gz" -o -name "*.deb" -o -name "*.rpm" -o -name "*.exe" -o -name "*.msi" -o -name "*.pkg" \) \
           -exec cp {} release-artifacts/${{ matrix.os }}/ \; 2>/dev/null || true
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: devclean-packages-${{ matrix.os }}
         path: release-artifacts/${{ matrix.os }}

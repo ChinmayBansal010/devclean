@@ -1,0 +1,16 @@
+name: Bug report
+description: Report a reproducible problem
+body:
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: List the commands and inputs that reproduce the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Actual output
+    validations:
+      required: true

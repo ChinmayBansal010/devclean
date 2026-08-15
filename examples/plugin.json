@@ -1,0 +1,11 @@
+{
+  "name": "example-tool",
+  "aliases": ["example", "tool"],
+  "category": "build",
+  "description": "Example user-defined build cache",
+  "enabled": true,
+  "priority": 5,
+  "cachePaths": ["/home/example/.cache/example-tool"],
+  "environmentVariables": ["EXAMPLE_TOOL_HOME"],
+  "osSupport": ["linux"]
+}

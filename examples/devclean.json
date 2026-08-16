@@ -1,0 +1,20 @@
+{
+  "schema_version": 3,
+  "defaults": {
+    "color": "none",
+    "sort": "size",
+    "category": ""
+  },
+  "disabled_caches": [],
+  "ignored_caches": [],
+  "custom_caches": [
+    {
+      "name": "my-build-cache",
+      "aliases": ["mybuild"],
+      "category": "build",
+      "linux_path": "~/.cache/my-build",
+      "windows_path": "%LOCALAPPDATA%/my-build",
+      "enabled": true
+    }
+  ]
+}

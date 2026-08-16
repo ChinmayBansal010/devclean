@@ -6,17 +6,27 @@
 
 #ifdef _WIN32
 #include <io.h>
+#include <windows.h>
 #else
+#include <sys/ioctl.h>
 #include <unistd.h>
 #endif
 
 int TerminalUtils::getTerminalWidth()
 {
 #ifdef _WIN32
+    CONSOLE_SCREEN_BUFFER_INFO info{};
+    if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &info))
+        return std::max(20, static_cast<int>(info.srWindow.Right - info.srWindow.Left + 1));
     return 80;
 #else
     if (isatty(STDOUT_FILENO))
     {
+#ifdef TIOCGWINSZ
+        winsize ws{};
+        if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == 0 && ws.ws_col > 0)
+            return std::max(20, static_cast<int>(ws.ws_col));
+#endif
         const char* cols = std::getenv("COLUMNS");
         if (cols != nullptr)
         {
@@ -31,6 +41,38 @@ int TerminalUtils::getTerminalWidth()
         }
     }
     return 80;
+#endif
+}
+
+int TerminalUtils::getTerminalHeight()
+{
+#ifdef _WIN32
+    CONSOLE_SCREEN_BUFFER_INFO info{};
+    if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &info))
+        return std::max(12, static_cast<int>(info.srWindow.Bottom - info.srWindow.Top + 1));
+    return 24;
+#else
+    if (isatty(STDOUT_FILENO))
+    {
+#ifdef TIOCGWINSZ
+        winsize ws{};
+        if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == 0 && ws.ws_row > 0)
+            return std::max(12, static_cast<int>(ws.ws_row));
+#endif
+        const char* lines = std::getenv("LINES");
+        if (lines != nullptr)
+        {
+            try
+            {
+                return std::max(12, std::stoi(lines));
+            }
+            catch (const std::exception&)
+            {
+                return 24;
+            }
+        }
+    }
+    return 24;
 #endif
 }
 

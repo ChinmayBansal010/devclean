@@ -1,5 +1,6 @@
 #include "commands/AnalyzeCommand.hpp"
 
+#include "core/CacheInsights.hpp"
 #include "core/Config.hpp"
 #include "core/ScanHistory.hpp"
 #include "platform/ToolDetector.hpp"
@@ -144,9 +145,26 @@ AnalysisData buildAnalysis(const std::vector<ScanResult>& results, const ParsedA
     return data;
 }
 
-void printMarkdownReport(const AnalysisData& data)
+void printMarkdownReport(const AnalysisData& data, const CacheInsights& insights)
 {
     std::cout << "# devclean analysis\n\n";
+    std::cout << "## Health\n";
+    std::cout << "- score: " << insights.health.score << "/100 (" << insights.health.label << ")\n";
+    std::cout << "- total usage: " << Formatter::formatBytes(insights.totalBytes) << "\n";
+    std::cout << "- latest growth: " << (insights.latestGrowthBytes >= 0 ? "+" : "-")
+              << Formatter::formatBytes(static_cast<uint64_t>(insights.latestGrowthBytes >= 0 ? insights.latestGrowthBytes : -insights.latestGrowthBytes))
+              << " (" << (insights.latestGrowthPercent >= 0.0 ? "+" : "") << insights.latestGrowthPercent << "%)\n";
+    if (!insights.health.factors.empty())
+    {
+        std::cout << "- factors: ";
+        for (std::size_t i = 0; i < insights.health.factors.size(); ++i)
+        {
+            if (i > 0)
+                std::cout << "; ";
+            std::cout << insights.health.factors[i];
+        }
+        std::cout << "\n";
+    }
     std::cout << "## Filters\n";
     std::cout << "- active-only: " << (data.activeOnly ? "true" : "false") << "\n";
     std::cout << "- minimum size: " << (data.minSizeBytes > 0 ? Formatter::formatBytes(data.minSizeBytes) : "none") << "\n";
@@ -167,55 +185,28 @@ void printMarkdownReport(const AnalysisData& data)
         std::cout << "- " << name << " - " << sign << Formatter::formatBytes(static_cast<uint64_t>(growth >= 0 ? growth : -growth)) << "\n";
     }
     std::cout << "\n## Recommendations\n";
-    if (!data.safeCaches.empty())
+    if (insights.recommendations.empty())
+        std::cout << "- no strong cleanup recommendations at this time\n";
+    else
     {
-        std::cout << "- Safe caches: ";
-        for (std::size_t i = 0; i < data.safeCaches.size(); ++i)
+        for (std::size_t i = 0; i < std::min<std::size_t>(insights.recommendations.size(), 5); ++i)
         {
-            if (i > 0)
-                std::cout << ", ";
-            std::cout << data.safeCaches[i];
+            const auto& recommendation = insights.recommendations[i];
+            std::cout << "- " << recommendation.name << " - " << recommendation.reason << " (" << recommendation.action << ")\n";
         }
-        std::cout << "\n";
-    }
-    if (!data.largeCaches.empty())
-    {
-        std::cout << "- Large caches: ";
-        for (std::size_t i = 0; i < data.largeCaches.size(); ++i)
-        {
-            if (i > 0)
-                std::cout << ", ";
-            std::cout << data.largeCaches[i];
-        }
-        std::cout << "\n";
-    }
-    if (!data.unusedCaches.empty())
-    {
-        std::cout << "- Unused caches: ";
-        for (std::size_t i = 0; i < data.unusedCaches.size(); ++i)
-        {
-            if (i > 0)
-                std::cout << ", ";
-            std::cout << data.unusedCaches[i];
-        }
-        std::cout << "\n";
-    }
-    if (!data.oldCaches.empty())
-    {
-        std::cout << "- Old caches: ";
-        for (std::size_t i = 0; i < data.oldCaches.size(); ++i)
-        {
-            if (i > 0)
-                std::cout << ", ";
-            std::cout << data.oldCaches[i];
-        }
-        std::cout << "\n";
     }
 }
 
-void printHtmlReport(const AnalysisData& data)
+void printHtmlReport(const AnalysisData& data, const CacheInsights& insights)
 {
     std::cout << "<html><body><h1>devclean analysis</h1>";
+    std::cout << "<h2>Health</h2><ul>";
+    std::cout << "<li>Score: " << insights.health.score << "/100 (" << insights.health.label << ")</li>";
+    std::cout << "<li>Total usage: " << Formatter::formatBytes(insights.totalBytes) << "</li>";
+    std::cout << "<li>Latest growth: " << (insights.latestGrowthBytes >= 0 ? "+" : "-")
+              << Formatter::formatBytes(static_cast<uint64_t>(insights.latestGrowthBytes >= 0 ? insights.latestGrowthBytes : -insights.latestGrowthBytes))
+              << " (" << (insights.latestGrowthPercent >= 0.0 ? "+" : "") << insights.latestGrowthPercent << "%)</li>";
+    std::cout << "</ul>";
     std::cout << "<h2>Filters</h2><ul>";
     std::cout << "<li>Active-only: " << (data.activeOnly ? "true" : "false") << "</li>";
     std::cout << "<li>Minimum size: " << (data.minSizeBytes > 0 ? Formatter::formatBytes(data.minSizeBytes) : "none") << "</li>";
@@ -227,21 +218,29 @@ void printHtmlReport(const AnalysisData& data)
     for (const auto& [type, bytes] : data.fileTypeBytes)
         std::cout << "<li>" << type << " - " << Formatter::formatBytes(bytes) << "</li>";
     std::cout << "</ul><h2>Recommendations</h2><ul>";
-    for (const auto& name : data.largeCaches)
-        std::cout << "<li>Large cache: " << name << "</li>";
-    for (const auto& name : data.safeCaches)
-        std::cout << "<li>Safe cache: " << name << "</li>";
-    for (const auto& name : data.oldCaches)
-        std::cout << "<li>Old cache: " << name << "</li>";
+    if (insights.recommendations.empty())
+        std::cout << "<li>No strong cleanup recommendations at this time</li>";
+    else
+    {
+        for (std::size_t i = 0; i < std::min<std::size_t>(insights.recommendations.size(), 5); ++i)
+        {
+            const auto& recommendation = insights.recommendations[i];
+            std::cout << "<li>" << recommendation.name << " - " << recommendation.reason << " (" << recommendation.action << ")</li>";
+        }
+    }
     std::cout << "</ul></body></html>\n";
 }
 
-void printCsvReport(const AnalysisData& data)
+void printCsvReport(const AnalysisData& data, const CacheInsights& insights)
 {
     std::cout << "section,name,value\n";
     std::cout << "filter,active_only," << (data.activeOnly ? "true" : "false") << '\n';
     std::cout << "filter,min_size_bytes," << data.minSizeBytes << '\n';
     std::cout << "filter,max_size_bytes," << data.maxSizeBytes << '\n';
+    std::cout << "health,score," << insights.health.score << '\n';
+    std::cout << "health,label," << escapeCsv(insights.health.label) << '\n';
+    std::cout << "trend,latest_growth_bytes," << insights.latestGrowthBytes << '\n';
+    std::cout << "trend,latest_growth_percent," << insights.latestGrowthPercent << '\n';
     for (const auto& [name, bytes] : data.largestFolders)
         std::cout << "largest_folder," << escapeCsv(name) << ',' << bytes << '\n';
     for (const auto& [type, bytes] : data.fileTypeBytes)
@@ -250,7 +249,7 @@ void printCsvReport(const AnalysisData& data)
         std::cout << "age," << escapeCsv(name) << ',' << days << '\n';
 }
 
-void printJsonReport(const AnalysisData& data)
+void printJsonReport(const AnalysisData& data, const CacheInsights& insights)
 {
     nlohmann::json payload = nlohmann::json::object();
     payload["filters"] = {
@@ -270,11 +269,43 @@ void printJsonReport(const AnalysisData& data)
     payload["growth"] = nlohmann::json::array();
     for (const auto& [name, growth] : data.growth)
         payload["growth"].push_back({{"name", name}, {"bytes", growth}});
+    payload["health"] = {
+        {"score", insights.health.score},
+        {"label", insights.health.label},
+        {"factors", insights.health.factors}
+    };
+    payload["trend"] = {
+        {"latest_growth_bytes", insights.latestGrowthBytes},
+        {"latest_growth_percent", insights.latestGrowthPercent},
+        {"average_growth_bytes", insights.averageGrowthBytes}
+    };
+    payload["history"] = nlohmann::json::array();
+    for (const auto& point : insights.history)
+    {
+        payload["history"].push_back({
+            {"timestamp", point.label},
+            {"total_bytes", point.totalBytes},
+            {"delta_bytes", point.deltaBytes}
+        });
+    }
     payload["recommendations"] = nlohmann::json::object();
     payload["recommendations"]["safe"] = data.safeCaches;
     payload["recommendations"]["large"] = data.largeCaches;
     payload["recommendations"]["unused"] = data.unusedCaches;
     payload["recommendations"]["old"] = data.oldCaches;
+    payload["recommendation_items"] = nlohmann::json::array();
+    for (const auto& recommendation : insights.recommendations)
+    {
+        payload["recommendation_items"].push_back({
+            {"name", recommendation.name},
+            {"reason", recommendation.reason},
+            {"action", recommendation.action},
+            {"bytes", recommendation.bytes},
+            {"growth_bytes", recommendation.growthBytes},
+            {"priority", recommendation.priority},
+            {"safe", recommendation.safe}
+        });
+    }
     std::cout << payload.dump(2) << '\n';
 }
 
@@ -288,18 +319,19 @@ int AnalyzeCommand::execute(const ParsedArgs& args)
     applyFilters(results, args);
     ScanHistory::getInstance().recordScan(results);
     auto analysis = buildAnalysis(results, args);
+    CacheInsights insights = buildCacheInsights(results, ScanHistory::getInstance().getHistory(6));
 
     if (!args.reportFormat.empty())
     {
         const std::string format = normalize(args.reportFormat);
         if (format == "markdown")
-            printMarkdownReport(analysis);
+            printMarkdownReport(analysis, insights);
         else if (format == "html")
-            printHtmlReport(analysis);
+            printHtmlReport(analysis, insights);
         else if (format == "csv")
-            printCsvReport(analysis);
+            printCsvReport(analysis, insights);
         else if (format == "json")
-            printJsonReport(analysis);
+            printJsonReport(analysis, insights);
         else
             std::cout << "Unsupported report format: " << args.reportFormat << '\n';
         return 0;
@@ -307,6 +339,14 @@ int AnalyzeCommand::execute(const ParsedArgs& args)
 
     std::cout << "\nAnalysis\n";
     std::cout << "--------\n";
+    std::cout << "Health score: " << insights.health.score << "/100 (" << insights.health.label << ")\n";
+    std::cout << "Total usage: " << Formatter::formatBytes(insights.totalBytes) << '\n';
+    std::cout << "Latest growth: "
+              << (insights.latestGrowthBytes >= 0 ? "+" : "-")
+              << Formatter::formatBytes(static_cast<uint64_t>(insights.latestGrowthBytes >= 0 ? insights.latestGrowthBytes : -insights.latestGrowthBytes))
+              << " (" << (insights.latestGrowthPercent >= 0.0 ? "+" : "") << insights.latestGrowthPercent << "%)\n";
+    if (!insights.recommendations.empty())
+        std::cout << "Top recommendation: " << insights.recommendations.front().name << " - " << insights.recommendations.front().action << '\n';
     std::cout << "Filters: ";
     if (!args.activeOnly && args.minSizeBytes == 0 && args.maxSizeBytes == 0)
         std::cout << "none\n";

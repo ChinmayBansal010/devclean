@@ -21,15 +21,18 @@ find_package(nlohmann_json CONFIG REQUIRED)
 
 add_library(devclean_core
     src/core/Application.cpp
+    src/core/CacheInsights.cpp
     src/core/ArgumentParser.cpp
     src/core/CommandDispatcher.cpp
     src/core/Config.cpp
     src/core/ScanHistory.cpp
 
     src/commands/AnalyzeCommand.cpp
+    src/commands/DashboardCommand.cpp
     src/commands/ScanCommand.cpp
     src/commands/CleanCommand.cpp
     src/commands/DoctorCommand.cpp
+    src/commands/RecommendCommand.cpp
     src/commands/StatsCommand.cpp
     src/commands/VersionCommand.cpp
 
@@ -57,6 +60,7 @@ add_executable(devclean_formatter_tests tests/unit/formatter_tests.cpp)
 add_executable(devclean_config_tests tests/unit/config_tests.cpp)
 add_executable(devclean_scanner_tests tests/unit/scanner_tests.cpp)
 add_executable(devclean_scan_result_tests tests/unit/scan_result_tests.cpp)
+add_executable(devclean_cache_insights_tests tests/unit/cache_insights_tests.cpp)
 add_executable(devclean_doctor_tests tests/unit/doctor_tests.cpp)
 add_executable(devclean_benchmark src/benchmark.cpp)
 
@@ -68,6 +72,7 @@ foreach(target
     devclean_config_tests
     devclean_scanner_tests
     devclean_scan_result_tests
+    devclean_cache_insights_tests
     devclean_doctor_tests
     devclean_benchmark)
     target_link_libraries(${target} PRIVATE devclean_core)
@@ -82,6 +87,7 @@ add_test(NAME devclean.unit.formatter COMMAND devclean_formatter_tests)
 add_test(NAME devclean.unit.config COMMAND devclean_config_tests)
 add_test(NAME devclean.integration.scanner COMMAND devclean_scanner_tests)
 add_test(NAME devclean.unit.scan_result COMMAND devclean_scan_result_tests)
+add_test(NAME devclean.unit.cache_insights COMMAND devclean_cache_insights_tests)
 add_test(NAME devclean.unit.doctor COMMAND devclean_doctor_tests)
 
 install(TARGETS devclean devclean_benchmark RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
@@ -118,6 +124,7 @@ if(DEVCLEAN_ENABLE_SANITIZERS OR ENABLE_SANITIZERS)
         devclean_config_tests
         devclean_scanner_tests
         devclean_scan_result_tests
+        devclean_cache_insights_tests
         devclean_doctor_tests
         devclean_benchmark)
         devclean_enable_sanitizers(${target})

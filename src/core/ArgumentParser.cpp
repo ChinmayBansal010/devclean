@@ -4,7 +4,6 @@
 #include <cctype>
 #include <limits>
 #include <string>
-#include <vector>
 
 namespace {
 
@@ -63,6 +62,44 @@ uint64_t parseSize(const std::string& value)
     }
 }
 
+uint64_t parseDuration(const std::string& value)
+{
+    const std::string normalized = normalize(value);
+    std::size_t suffixStart = 0;
+    while (suffixStart < normalized.size() && std::isdigit(static_cast<unsigned char>(normalized[suffixStart])))
+        ++suffixStart;
+
+    if (suffixStart == 0)
+        return 0;
+
+    uint64_t multiplier = 1;
+    const std::string suffix = normalized.substr(suffixStart);
+    if (suffix == "s")
+        multiplier = 1;
+    else if (suffix == "m")
+        multiplier = 60ULL;
+    else if (suffix == "h")
+        multiplier = 60ULL * 60ULL;
+    else if (suffix == "d")
+        multiplier = 24ULL * 60ULL * 60ULL;
+    else if (suffix == "w")
+        multiplier = 7ULL * 24ULL * 60ULL * 60ULL;
+    else
+        return 0;
+
+    try
+    {
+        const uint64_t base = std::stoull(normalized.substr(0, suffixStart));
+        if (base > std::numeric_limits<uint64_t>::max() / multiplier)
+            return 0;
+        return base * multiplier;
+    }
+    catch (...)
+    {
+        return 0;
+    }
+}
+
 }
 
 ParsedArgs ArgumentParser::parse(int argc, char* argv[])
@@ -71,8 +108,8 @@ ParsedArgs ArgumentParser::parse(int argc, char* argv[])
 
     for (int i = 1; i < argc; ++i)
     {
-        std::string token = argv[i];
-        std::string lower = normalize(token);
+        const std::string token = argv[i];
+        const std::string lower = normalize(token);
 
         if (token == "--json")
             args.json = true;
@@ -82,6 +119,8 @@ ParsedArgs ArgumentParser::parse(int argc, char* argv[])
             args.dryRun = true;
         else if (token == "--force")
             args.force = true;
+        else if (token == "--safe")
+            args.safe = true;
         else if (token == "--active-only")
             args.activeOnly = true;
         else if (token == "--min-size")
@@ -93,6 +132,16 @@ ParsedArgs ArgumentParser::parse(int argc, char* argv[])
         {
             if (hasValue(i, argc, argv))
                 args.maxSizeBytes = parseSize(argv[++i]);
+        }
+        else if (token == "--target")
+        {
+            if (hasValue(i, argc, argv))
+                args.targetSizeBytes = parseSize(argv[++i]);
+        }
+        else if (token == "--stale")
+        {
+            if (hasValue(i, argc, argv))
+                args.staleSeconds = parseDuration(argv[++i]);
         }
         else if (token == "--help" || token == "-h")
             args.help = true;

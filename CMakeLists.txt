@@ -10,9 +10,10 @@ option(DEVCLEAN_ENABLE_SANITIZERS "Build with AddressSanitizer and UBSan" OFF)
 option(ENABLE_SANITIZERS "Compatibility alias for sanitizer builds" OFF)
 
 include(GNUInstallDirs)
-include_directories(include)
+include(CTest)
 include(cmake/DevCleanWarnings.cmake)
 include(cmake/DevCleanSanitizers.cmake)
+include_directories(include)
 
 enable_testing()
 
@@ -28,6 +29,7 @@ add_library(devclean_core
     src/commands/AnalyzeCommand.cpp
     src/commands/ScanCommand.cpp
     src/commands/CleanCommand.cpp
+    src/commands/DoctorCommand.cpp
     src/commands/StatsCommand.cpp
     src/commands/VersionCommand.cpp
 
@@ -55,6 +57,7 @@ add_executable(devclean_formatter_tests tests/unit/formatter_tests.cpp)
 add_executable(devclean_config_tests tests/unit/config_tests.cpp)
 add_executable(devclean_scanner_tests tests/unit/scanner_tests.cpp)
 add_executable(devclean_scan_result_tests tests/unit/scan_result_tests.cpp)
+add_executable(devclean_doctor_tests tests/unit/doctor_tests.cpp)
 add_executable(devclean_benchmark src/benchmark.cpp)
 
 foreach(target
@@ -65,6 +68,7 @@ foreach(target
     devclean_config_tests
     devclean_scanner_tests
     devclean_scan_result_tests
+    devclean_doctor_tests
     devclean_benchmark)
     target_link_libraries(${target} PRIVATE devclean_core)
     devclean_enable_warnings(${target})
@@ -78,6 +82,7 @@ add_test(NAME devclean.unit.formatter COMMAND devclean_formatter_tests)
 add_test(NAME devclean.unit.config COMMAND devclean_config_tests)
 add_test(NAME devclean.integration.scanner COMMAND devclean_scanner_tests)
 add_test(NAME devclean.unit.scan_result COMMAND devclean_scan_result_tests)
+add_test(NAME devclean.unit.doctor COMMAND devclean_doctor_tests)
 
 install(TARGETS devclean devclean_benchmark RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES docs/devclean.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
@@ -113,6 +118,7 @@ if(DEVCLEAN_ENABLE_SANITIZERS OR ENABLE_SANITIZERS)
         devclean_config_tests
         devclean_scanner_tests
         devclean_scan_result_tests
+        devclean_doctor_tests
         devclean_benchmark)
         devclean_enable_sanitizers(${target})
     endforeach()

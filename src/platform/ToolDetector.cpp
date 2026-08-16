@@ -1,13 +1,13 @@
 #include "platform/ToolDetector.hpp"
 
 #include <algorithm>
-#include <cstdlib>
 #include <cctype>
+#include <cstdlib>
+#include <filesystem>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <filesystem>
-#include <sstream>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -31,44 +31,29 @@ std::string normalize(std::string value)
     return value;
 }
 
-} // namespace
+}
 
 bool ToolDetector::isInstalled(const std::string& toolName)
 {
-    #ifdef _WIN32
-        char buffer[MAX_PATH];
-
-        DWORD result = SearchPathA(
-            nullptr,
-            toolName.c_str(),
-            nullptr,
-            MAX_PATH,
-            buffer,
-            nullptr
-        );
-
-        return result != 0;
-    #else
-        const char* pathEnv = std::getenv("PATH");
-        if (pathEnv == nullptr)
-            return false;
-
-        std::stringstream ss(pathEnv);
-        std::string dir;
-
-        while (std::getline(ss, dir, ':'))
-        {
-            std::filesystem::path candidate = std::filesystem::path(dir) / toolName;
-
-            if (std::filesystem::exists(candidate) &&
-                access(candidate.c_str(), X_OK) == 0)
-            {
-                return true;
-            }
-        }
-
+#ifdef _WIN32
+    char buffer[MAX_PATH];
+    const DWORD result = SearchPathA(nullptr, toolName.c_str(), nullptr, MAX_PATH, buffer, nullptr);
+    return result != 0;
+#else
+    const char* pathEnv = std::getenv("PATH");
+    if (pathEnv == nullptr)
         return false;
-    #endif
+
+    std::stringstream ss(pathEnv);
+    std::string dir;
+    while (std::getline(ss, dir, ':'))
+    {
+        const std::filesystem::path candidate = std::filesystem::path(dir) / toolName;
+        if (std::filesystem::exists(candidate) && access(candidate.c_str(), X_OK) == 0)
+            return true;
+    }
+    return false;
+#endif
 }
 
 bool ToolDetector::isRunning(const std::string& processName)
@@ -111,4 +96,42 @@ std::vector<std::string> ToolDetector::getWarningsForCache(const std::string& ca
         warnings.emplace_back("A package manager appears to be active; deleting its cache may affect ongoing operations.");
 
     return warnings;
+}
+
+std::vector<ToolStatus> ToolDetector::getEnvironmentReport() const
+{
+    const std::vector<std::pair<std::string, std::string>> tools = {
+        {"git", "git"},
+        {"cmake", "cmake"},
+        {"gcc", "gcc"},
+        {"g++", "g++"},
+        {"clang", "clang"},
+        {"python", "python3"},
+        {"node", "node"},
+        {"npm", "npm"},
+        {"pnpm", "pnpm"},
+        {"yarn", "yarn"},
+        {"cargo", "cargo"},
+        {"rustc", "rustc"},
+        {"java", "java"},
+        {"gradle", "gradle"},
+        {"mvn", "mvn"},
+        {"docker", "docker"},
+        {"podman", "podman"},
+        {"code", "code"},
+        {"clang-format", "clang-format"},
+        {"clang-tidy", "clang-tidy"}
+    };
+
+    std::vector<ToolStatus> report;
+    report.reserve(tools.size());
+    for (const auto& [label, executable] : tools)
+    {
+        ToolStatus status;
+        status.name = label;
+        status.installed = isInstalled(executable);
+        status.running = isRunning(executable);
+        report.push_back(std::move(status));
+    }
+    return report;
 }

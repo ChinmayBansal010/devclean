@@ -2,6 +2,7 @@
 
 #include "commands/AnalyzeCommand.hpp"
 #include "commands/CleanCommand.hpp"
+#include "commands/DoctorCommand.hpp"
 #include "commands/ScanCommand.hpp"
 #include "commands/StatsCommand.hpp"
 #include "commands/VersionCommand.hpp"
@@ -20,6 +21,7 @@ void printHelp()
     std::cout << "  scan         Scan known developer caches\n";
     std::cout << "  analyze      Analyze cache growth and recommendations\n";
     std::cout << "  clean        Remove discovered cache directories\n";
+    std::cout << "  doctor       Inspect the developer environment\n";
     std::cout << "  stats        Show aggregate cache statistics\n";
     std::cout << "  version      Print the current version\n";
     std::cout << "\nTargets:\n";
@@ -30,6 +32,9 @@ void printHelp()
     std::cout << "  --verbose           Include additional details\n";
     std::cout << "  --dry-run           Show what would be removed\n";
     std::cout << "  --force             Skip confirmation prompts\n";
+    std::cout << "  --safe              Only clean inactive, unprotected caches without warnings\n";
+    std::cout << "  --target <size>     Clean up to the requested amount, e.g. 10GB\n";
+    std::cout << "  --stale <duration>  Remove files older than e.g. 30d, 12h, or 60m\n";
     std::cout << "  --active-only       Include only caches associated with active tools\n";
     std::cout << "  --min-size <size>   Include caches at or above a size threshold\n";
     std::cout << "  --max-size <size>   Include caches at or below a size threshold\n";
@@ -45,10 +50,13 @@ void printHelp()
     std::cout << "  devclean scan --min-size 250MB --max-size 2GB\n";
     std::cout << "  devclean analyze --report markdown\n";
     std::cout << "  devclean clean --dry-run --exclude npm\n";
+    std::cout << "  devclean clean --safe --target 10GB\n";
+    std::cout << "  devclean clean --safe --stale 30d\n";
+    std::cout << "  devclean doctor --json\n";
     std::cout << "  devclean stats --json\n";
 }
 
-} // namespace
+}
 
 int CommandDispatcher::dispatch(int argc, char* argv[])
 {
@@ -71,31 +79,31 @@ int CommandDispatcher::dispatch(int argc, char* argv[])
         ScanCommand command;
         return command.execute(args);
     }
-
     if (args.command == "analyze")
     {
         AnalyzeCommand command;
         return command.execute(args);
     }
-
     if (args.command == "clean")
     {
         CleanCommand command;
         return command.execute(args);
     }
-
+    if (args.command == "doctor")
+    {
+        DoctorCommand command;
+        return command.execute(args);
+    }
     if (args.command == "stats")
     {
         StatsCommand command;
         return command.execute(args);
     }
-
     if (args.command == "version")
     {
         VersionCommand command;
         return command.execute(args);
     }
-
     if (args.command == "help")
     {
         printHelp();

@@ -2,11 +2,13 @@
 
 #include "cleaner/CleanEngine.hpp"
 #include "core/Config.hpp"
+#include "platform/Filesystem.hpp"
 #include "platform/ToolDetector.hpp"
 #include "scanner/ScannerEngine.hpp"
 #include "utils/Formatter.hpp"
 
 #include <algorithm>
+#include <cctype>
 #include <iostream>
 #include <nlohmann/json.hpp>
 #include <sstream>
@@ -47,6 +49,13 @@ std::vector<ScanResult> applyFilters(const std::vector<ScanResult>& input, const
     {
         results.erase(std::remove_if(results.begin(), results.end(), [](const ScanResult& result) {
             return !result.active;
+        }), results.end());
+    }
+
+    if (args.safe)
+    {
+        results.erase(std::remove_if(results.begin(), results.end(), [](const ScanResult& result) {
+            return result.active || !result.warnings.empty() || Filesystem::isProtectedPath(result.location);
         }), results.end());
     }
 
@@ -107,6 +116,30 @@ std::vector<ScanResult> applyFilters(const std::vector<ScanResult>& input, const
     return results;
 }
 
+std::vector<ScanResult> applyTarget(const std::vector<ScanResult>& candidates, uint64_t targetBytes)
+{
+    if (targetBytes == 0)
+        return candidates;
+
+    std::vector<ScanResult> ordered = candidates;
+    std::stable_sort(ordered.begin(), ordered.end(), [](const auto& lhs, const auto& rhs) {
+        return lhs.bytes < rhs.bytes;
+    });
+
+    std::vector<ScanResult> selected;
+    uint64_t planned = 0;
+    for (const auto& candidate : ordered)
+    {
+        if (candidate.bytes == 0 || planned + candidate.bytes > targetBytes)
+            continue;
+        selected.push_back(candidate);
+        planned += candidate.bytes;
+        if (planned >= targetBytes)
+            break;
+    }
+    return selected;
+}
+
 bool isInteractiveTerminal()
 {
 #ifdef _WIN32
@@ -123,8 +156,8 @@ std::vector<ScanResult> selectCandidates(const std::vector<ScanResult>& candidat
         return selected;
 
     std::cout << "Select caches to delete:\n";
-    for (std::size_t i = 0; i < candidates.size(); ++i)
-        std::cout << "[ ] " << candidates[i].name << "\n";
+    for (const auto& candidate : candidates)
+        std::cout << "[ ] " << candidate.name << "\n";
     std::cout << "Enter names separated by spaces, or press Enter to delete all: ";
 
     std::string input;
@@ -167,14 +200,17 @@ int CleanCommand::execute(const ParsedArgs& args)
 
     if (effectiveArgs.category.empty() && !config.defaultCategory.empty())
         effectiveArgs.category = config.defaultCategory;
+
     ScannerEngine scanner;
     CleanEngine cleaner;
-
     auto results = scanner.scan(effectiveArgs.targets, config);
     auto candidates = applyFilters(results, effectiveArgs);
     candidates.erase(std::remove_if(candidates.begin(), candidates.end(), [](const ScanResult& result) {
         return !result.found;
     }), candidates.end());
+
+    if (effectiveArgs.targetSizeBytes > 0)
+        candidates = applyTarget(candidates, effectiveArgs.targetSizeBytes);
 
     if (candidates.empty())
     {
@@ -188,6 +224,9 @@ int CleanCommand::execute(const ParsedArgs& args)
         payload["command"] = "clean";
         payload["dry_run"] = args.dryRun;
         payload["force"] = args.force;
+        payload["safe"] = args.safe;
+        payload["stale_seconds"] = args.staleSeconds;
+        payload["target_size_bytes"] = args.targetSizeBytes;
         payload["active_only"] = args.activeOnly;
         payload["min_size_bytes"] = args.minSizeBytes;
         payload["max_size_bytes"] = args.maxSizeBytes;
@@ -195,12 +234,13 @@ int CleanCommand::execute(const ParsedArgs& args)
         payload["caches"] = nlohmann::json::array();
         for (const auto& candidate : candidates)
         {
-            nlohmann::json entry = nlohmann::json::object();
-            entry["name"] = candidate.name;
-            entry["path"] = candidate.location.string();
-            entry["bytes"] = candidate.bytes;
-            entry["active"] = candidate.active;
-            payload["caches"].push_back(std::move(entry));
+            payload["caches"].push_back({
+                {"name", candidate.name},
+                {"path", candidate.location.string()},
+                {"bytes", candidate.bytes},
+                {"active", candidate.active},
+                {"warnings", candidate.warnings}
+            });
         }
         std::cout << payload.dump(2) << '\n';
         return 0;
@@ -213,7 +253,7 @@ int CleanCommand::execute(const ParsedArgs& args)
         return 0;
     }
 
-    std::cout << "Caches that can be removed:\n\n";
+    std::cout << "Caches selected for cleanup:\n\n";
     for (const auto& candidate : selected)
     {
         std::cout << "  " << candidate.name << " (" << Formatter::formatBytes(candidate.bytes) << ")\n";
@@ -222,22 +262,15 @@ int CleanCommand::execute(const ParsedArgs& args)
             std::cout << "    warning: " << warning << "\n";
     }
 
-    bool hasSafetyWarnings = false;
-    for (const auto& candidate : selected)
-    {
-        if (!ToolDetector::getInstance().getWarningsForCache(candidate.name).empty())
-        {
-            hasSafetyWarnings = true;
-            break;
-        }
-    }
+    if (args.safe)
+        std::cout << "\nSafe mode: only inactive, unprotected caches without active-tool warnings are eligible.\n";
 
-    if (hasSafetyWarnings && !args.force)
-        std::cout << "\nSafety warning: related tools appear active. Review the warnings above before continuing.\n";
+    if (args.staleSeconds > 0)
+        std::cout << "Stale mode: only files older than " << args.staleSeconds << " seconds will be removed.\n";
 
     if (args.dryRun)
     {
-        std::cout << "\nDry run: no directories were removed.\n";
+        std::cout << "\nDry run: no files or directories were removed.\n";
         return 0;
     }
 
@@ -254,22 +287,46 @@ int CleanCommand::execute(const ParsedArgs& args)
     }
 
     int exitCode = 0;
+    uint64_t totalBytesRemoved = 0;
+    uint64_t totalFilesRemoved = 0;
+    uint64_t remainingTarget = args.targetSizeBytes;
+
     for (const auto& candidate : selected)
     {
         if (args.verbose)
-            std::cout << "Deleting... " << candidate.name << '\n';
-        const auto cleanResult = cleaner.removeDirectory(candidate.location);
+            std::cout << "Cleaning... " << candidate.name << '\n';
+
+        CleanResult cleanResult;
+        if (args.staleSeconds > 0)
+            cleanResult = cleaner.removeStaleFiles(candidate.location, args.staleSeconds, remainingTarget);
+        else
+            cleanResult = cleaner.removeDirectory(candidate.location);
+
+        totalBytesRemoved += cleanResult.bytesRemoved;
+        totalFilesRemoved += cleanResult.filesRemoved;
+
+        if (args.targetSizeBytes > 0 && cleanResult.bytesRemoved < remainingTarget)
+            remainingTarget -= cleanResult.bytesRemoved;
+        else if (args.targetSizeBytes > 0)
+            remainingTarget = 0;
+
         if (cleanResult.success)
-            std::cout << "[OK]   " << candidate.name << '\n';
+            std::cout << "[OK]   " << candidate.name << "\n";
         else
         {
-            std::cout << "[SKIP] " << candidate.name << '\n';
+            std::cout << "[SKIP] " << candidate.name << "\n";
             if (!cleanResult.error.empty())
                 std::cout << "       " << cleanResult.error << '\n';
             if (exitCode == 0)
                 exitCode = 1;
         }
+
+        if (args.targetSizeBytes > 0 && remainingTarget == 0)
+            break;
     }
+
+    if (args.staleSeconds > 0)
+        std::cout << "Removed " << totalFilesRemoved << " stale files (" << Formatter::formatBytes(totalBytesRemoved) << ").\n";
 
     if (args.verbose)
         std::cout << "Finished.\n";

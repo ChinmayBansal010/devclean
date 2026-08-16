@@ -14,12 +14,15 @@ struct ParsedArgs
     std::string reportFormat;
     uint64_t minSizeBytes = 0;
     uint64_t maxSizeBytes = 0;
+    uint64_t targetSizeBytes = 0;
+    uint64_t staleSeconds = 0;
     bool activeOnly = false;
     bool reverse = false;
     bool json = false;
     bool verbose = false;
     bool dryRun = false;
     bool force = false;
+    bool safe = false;
     bool help = false;
     bool version = false;
 };

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="console-application">
+  <id>com.chinmaybansal.devclean</id>
+  <name>DevClean</name>
+  <summary>Inspect and clean developer caches</summary>
+  <description>
+    <p>DevClean discovers common development caches, reports their size and activity, and provides guarded cleanup workflows.</p>
+  </description>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+</component>

@@ -6,6 +6,7 @@
 
 - Registry-driven cache definitions with plugin and config overrides
 - Scan, analyze, stats, clean, doctor, and version commands
+- Recommend and dashboard commands for health scoring and cleanup guidance
 - Target-based cleanup and stale-file cleanup
 - Safe cleanup mode that excludes active, warned, and protected locations
 - Interactive cleanup with JSON output for automation
@@ -79,6 +80,8 @@ When you build with the vcpkg toolchain, `nlohmann-json` is installed automatica
 devclean scan
 devclean scan --category python
 devclean analyze --report json
+devclean recommend
+devclean dashboard
 devclean clean --dry-run --exclude npm
 devclean clean --safe --target 10GB
 devclean clean --safe --stale 30d
@@ -109,6 +112,12 @@ Supported duration units are seconds (`s`), minutes (`m`), hours (`h`), days (`d
 ### Developer diagnostics
 
 `devclean doctor` checks common developer tools and reports whether they are installed and currently running. Use `--json` for automation and scripts.
+
+### Cache health and trends
+
+`devclean recommend` prints a health score, growth trend, and cleanup recommendations ranked by impact and safety.
+
+`devclean dashboard` opens an interactive terminal dashboard. Press Enter to refresh the scan and `q` to quit.
 
 ### Example output
 

@@ -9,6 +9,7 @@ The long-term vision of **devclean** is to become a comprehensive developer work
 ## Cross-Platform Stability
 
 ### Platform Validation
+
 - Expand automated testing on Windows, Linux, and macOS.
 - Validate compatibility with multiple filesystem types.
 - Improve WSL support.
@@ -19,6 +20,7 @@ The long-term vision of **devclean** is to become a comprehensive developer work
 - Test across multiple CPU architectures.
 
 ### Package Manager Improvements
+
 - Better cleanup heuristics for existing package managers.
 - More accurate detection of obsolete caches.
 - Detect partially downloaded packages.
@@ -29,6 +31,7 @@ The long-term vision of **devclean** is to become a comprehensive developer work
 - Reduce false-positive deletions.
 
 ### Cache Detection
+
 - Discover additional cache locations automatically.
 - Better identification of temporary files.
 - Detect duplicate caches.
@@ -191,12 +194,14 @@ The long-term vision of **devclean** is to become a comprehensive developer work
 ## Language Support
 
 ### JavaScript
+
 - npm
 - pnpm
 - Yarn
 - Bun
 
 ### Python
+
 - pip
 - uv
 - Poetry
@@ -204,47 +209,60 @@ The long-term vision of **devclean** is to become a comprehensive developer work
 - Conda
 
 ### Rust
+
 - Cargo
 
 ### Java
+
 - Maven
 - Gradle
 
 ### Go
+
 - Go modules
 
 ### .NET
+
 - NuGet
 
 ### C/C++
+
 - Conan
 - vcpkg
 
 ### PHP
+
 - Composer
 
 ### Ruby
+
 - Bundler
 - RubyGems
 
 ### Dart
+
 - Pub
 - Flutter
 
 ### Haskell
+
 - Cabal
 - Stack
 
 ### Elixir
+
 - Mix
 
 ### Swift
+
 - Swift Package Manager
 
 ### R
+
 - renv
 
 ### Julia
+
 - Julia Package Manager
 
 ---

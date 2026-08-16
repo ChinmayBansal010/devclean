@@ -1,6 +1,8 @@
 #include "commands/StatsCommand.hpp"
 
+#include "core/CacheInsights.hpp"
 #include "core/Config.hpp"
+#include "core/ScanHistory.hpp"
 #include "scanner/ScannerEngine.hpp"
 #include "utils/Formatter.hpp"
 
@@ -65,6 +67,8 @@ int StatsCommand::execute(const ParsedArgs& args)
     ScannerEngine scanner;
     auto results = scanner.scan(args.targets, config);
     applyFilters(results, args);
+    ScanHistory::getInstance().recordScan(results);
+    CacheInsights insights = buildCacheInsights(results, ScanHistory::getInstance().getHistory(6));
 
     uint64_t totalBytes = 0;
     uint64_t totalFiles = 0;
@@ -114,6 +118,29 @@ int StatsCommand::execute(const ParsedArgs& args)
         payload["total_bytes"] = totalBytes;
         payload["total_files"] = totalFiles;
         payload["total_directories"] = totalDirectories;
+        payload["health"] = {
+            {"score", insights.health.score},
+            {"label", insights.health.label},
+            {"factors", insights.health.factors}
+        };
+        payload["trend"] = {
+            {"latest_growth_bytes", insights.latestGrowthBytes},
+            {"latest_growth_percent", insights.latestGrowthPercent},
+            {"average_growth_bytes", insights.averageGrowthBytes}
+        };
+        payload["recommendations"] = nlohmann::json::array();
+        for (const auto& recommendation : insights.recommendations)
+        {
+            payload["recommendations"].push_back({
+                {"name", recommendation.name},
+                {"reason", recommendation.reason},
+                {"action", recommendation.action},
+                {"bytes", recommendation.bytes},
+                {"growth_bytes", recommendation.growthBytes},
+                {"priority", recommendation.priority},
+                {"safe", recommendation.safe}
+            });
+        }
         payload["largest_caches"] = nlohmann::json::array();
         for (std::size_t i = 0; i < std::min<std::size_t>(largestCaches.size(), 5); ++i)
         {
@@ -170,6 +197,19 @@ int StatsCommand::execute(const ParsedArgs& args)
     std::cout << "Total size: " << Formatter::formatBytes(totalBytes) << '\n';
     std::cout << "Total files: " << totalFiles << '\n';
     std::cout << "Total directories: " << totalDirectories << '\n';
+    std::cout << "Health score: " << insights.health.score << "/100 (" << insights.health.label << ")\n";
+    std::cout << "Latest growth: "
+              << (insights.latestGrowthBytes >= 0 ? "+" : "-")
+              << Formatter::formatBytes(static_cast<uint64_t>(insights.latestGrowthBytes >= 0 ? insights.latestGrowthBytes : -insights.latestGrowthBytes))
+              << " (" << (insights.latestGrowthPercent >= 0.0 ? "+" : "") << insights.latestGrowthPercent << "%)\n";
+    std::cout << "Average growth: "
+              << (insights.averageGrowthBytes >= 0 ? "+" : "-")
+              << Formatter::formatBytes(static_cast<uint64_t>(insights.averageGrowthBytes >= 0 ? insights.averageGrowthBytes : -insights.averageGrowthBytes))
+              << " per snapshot\n";
+    if (!insights.recommendations.empty())
+    {
+        std::cout << "Top recommendation: " << insights.recommendations.front().name << " - " << insights.recommendations.front().action << '\n';
+    }
     std::cout << "\nLargest caches:\n";
     for (std::size_t i = 0; i < std::min<std::size_t>(largestCaches.size(), 5); ++i)
         std::cout << "  - " << largestCaches[i].first << " (" << Formatter::formatBytes(largestCaches[i].second) << ")\n";

@@ -33,6 +33,7 @@ class TerminalUtils
 {
 public:
     static int getTerminalWidth();
+    static int getTerminalHeight();
     static bool supportsUnicode();
     static bool isTTY();
 

@@ -1,8 +1,10 @@
 #include "core/CommandDispatcher.hpp"
 
 #include "commands/AnalyzeCommand.hpp"
+#include "commands/DashboardCommand.hpp"
 #include "commands/CleanCommand.hpp"
 #include "commands/DoctorCommand.hpp"
+#include "commands/RecommendCommand.hpp"
 #include "commands/ScanCommand.hpp"
 #include "commands/StatsCommand.hpp"
 #include "commands/VersionCommand.hpp"
@@ -20,6 +22,8 @@ void printHelp()
     std::cout << "\nCommands:\n";
     std::cout << "  scan         Scan known developer caches\n";
     std::cout << "  analyze      Analyze cache growth and recommendations\n";
+    std::cout << "  recommend    Show intelligent cleanup recommendations\n";
+    std::cout << "  dashboard    Open the interactive cache health dashboard\n";
     std::cout << "  clean        Remove discovered cache directories\n";
     std::cout << "  doctor       Inspect the developer environment\n";
     std::cout << "  stats        Show aggregate cache statistics\n";
@@ -49,6 +53,8 @@ void printHelp()
     std::cout << "  devclean scan\n";
     std::cout << "  devclean scan --min-size 250MB --max-size 2GB\n";
     std::cout << "  devclean analyze --report markdown\n";
+    std::cout << "  devclean recommend --json\n";
+    std::cout << "  devclean dashboard\n";
     std::cout << "  devclean clean --dry-run --exclude npm\n";
     std::cout << "  devclean clean --safe --target 10GB\n";
     std::cout << "  devclean clean --safe --stale 30d\n";
@@ -82,6 +88,16 @@ int CommandDispatcher::dispatch(int argc, char* argv[])
     if (args.command == "analyze")
     {
         AnalyzeCommand command;
+        return command.execute(args);
+    }
+    if (args.command == "recommend")
+    {
+        RecommendCommand command;
+        return command.execute(args);
+    }
+    if (args.command == "dashboard")
+    {
+        DashboardCommand command;
         return command.execute(args);
     }
     if (args.command == "clean")

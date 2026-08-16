@@ -50,6 +50,28 @@ devclean analyze --report markdown
 
 Use `--report` when the output needs to be consumed by another tool or saved as documentation. Analysis respects the same activity and size-range filters as scanning.
 
+`analyze` now includes a health score, recent growth trend, and ranked cleanup recommendations in its default output and structured reports.
+
+## Recommend
+
+```bash
+devclean recommend
+devclean recommend --json
+devclean recommend --active-only --min-size 250MB
+```
+
+`recommend` focuses on the highest-value cleanup opportunities. It shows the cache health score, recent growth, and an ordered list of cleanup actions.
+
+## Dashboard
+
+```bash
+devclean dashboard
+devclean dashboard --json
+```
+
+`dashboard` opens an interactive terminal view with a live health score, trend history, and cleanup recommendations. Press Enter to refresh the scan and `q` to exit.
+The dashboard also supports `j`/`k` or the arrow keys to move between recommendations, `a` to toggle auto-refresh, and `home`/`end` to jump to the first or last recommendation.
+
 ## Statistics
 
 ```bash
@@ -58,7 +80,7 @@ devclean stats --active-only --min-size 1GB --max-size 4GB
 devclean stats --json
 ```
 
-`stats` summarizes total disk usage, files, directories, largest caches, and category totals for the selected cache set.
+`stats` summarizes total disk usage, files, directories, largest caches, category totals, health score, and growth trend for the selected cache set.
 
 ## Cleanup
 

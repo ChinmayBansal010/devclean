@@ -10,6 +10,8 @@ option(ENABLE_SANITIZERS "Build with AddressSanitizer and UBSan" OFF)
 
 include(GNUInstallDirs)
 include_directories(include)
+include(cmake/DevCleanWarnings.cmake)
+include(cmake/DevCleanSanitizers.cmake)
 
 enable_testing()
 
@@ -45,47 +47,36 @@ add_library(devclean_core
 target_compile_definitions(devclean_core PRIVATE DEVCLEAN_VERSION="${PROJECT_VERSION}")
 target_link_libraries(devclean_core PRIVATE nlohmann_json::nlohmann_json)
 
-add_executable(devclean
-    src/main.cpp
-)
+add_executable(devclean src/main.cpp)
+add_executable(devclean_tests tests/cli_tests.cpp)
+add_executable(devclean_parser_tests tests/unit/argument_parser_tests.cpp)
+add_executable(devclean_formatter_tests tests/unit/formatter_tests.cpp)
+add_executable(devclean_config_tests tests/unit/config_tests.cpp)
+add_executable(devclean_scanner_tests tests/unit/scanner_tests.cpp)
+add_executable(devclean_scan_result_tests tests/unit/scan_result_tests.cpp)
+add_executable(devclean_benchmark src/benchmark.cpp)
 
-add_executable(devclean_tests
-    tests/cli_tests.cpp
-)
+foreach(target
+    devclean
+    devclean_tests
+    devclean_parser_tests
+    devclean_formatter_tests
+    devclean_config_tests
+    devclean_scanner_tests
+    devclean_scan_result_tests
+    devclean_benchmark)
+    target_link_libraries(${target} PRIVATE devclean_core)
+    devclean_enable_warnings(${target})
+endforeach()
 
-add_executable(devclean_parser_tests
-    tests/unit/argument_parser_tests.cpp
-)
-
-add_executable(devclean_formatter_tests
-    tests/unit/formatter_tests.cpp
-)
-
-add_executable(devclean_config_tests
-    tests/unit/config_tests.cpp
-)
-
-add_executable(devclean_scanner_tests
-    tests/unit/scanner_tests.cpp
-)
-
-add_executable(devclean_benchmark
-    src/benchmark.cpp
-)
-
-target_link_libraries(devclean PRIVATE devclean_core)
-target_link_libraries(devclean_tests PRIVATE devclean_core)
-target_link_libraries(devclean_parser_tests PRIVATE devclean_core)
-target_link_libraries(devclean_formatter_tests PRIVATE devclean_core)
-target_link_libraries(devclean_config_tests PRIVATE devclean_core)
-target_link_libraries(devclean_scanner_tests PRIVATE devclean_core)
-target_link_libraries(devclean_benchmark PRIVATE devclean_core)
+devclean_enable_warnings(devclean_core)
 
 add_test(NAME devclean.integration.cli COMMAND devclean_tests)
 add_test(NAME devclean.unit.argument_parser COMMAND devclean_parser_tests)
 add_test(NAME devclean.unit.formatter COMMAND devclean_formatter_tests)
 add_test(NAME devclean.unit.config COMMAND devclean_config_tests)
 add_test(NAME devclean.integration.scanner COMMAND devclean_scanner_tests)
+add_test(NAME devclean.unit.scan_result COMMAND devclean_scan_result_tests)
 
 install(TARGETS devclean devclean_benchmark RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES docs/devclean.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
@@ -112,42 +103,18 @@ endif()
 include(CPack)
 
 if(ENABLE_SANITIZERS)
-    if(MSVC)
-        foreach(target devclean_core devclean devclean_tests devclean_parser_tests devclean_formatter_tests devclean_config_tests devclean_scanner_tests devclean_benchmark)
-            target_compile_options(${target} PRIVATE /fsanitize=address /Zi)
-            target_link_options(${target} PRIVATE /INCREMENTAL:NO /DEBUG /fsanitize=address)
-        endforeach()
-    else()
-        foreach(target devclean_core devclean devclean_tests devclean_parser_tests devclean_formatter_tests devclean_config_tests devclean_scanner_tests devclean_benchmark)
-            target_compile_options(${target} PRIVATE
-                -fsanitize=address,undefined
-                -fno-omit-frame-pointer
-            )
-            target_link_options(${target} PRIVATE
-                -fsanitize=address,undefined
-            )
-        endforeach()
-    endif()
-endif()
-
-if(MSVC)
-    target_compile_options(devclean_core PRIVATE /W4)
-    target_compile_options(devclean PRIVATE /W4)
-    target_compile_options(devclean_tests PRIVATE /W4)
-    target_compile_options(devclean_parser_tests PRIVATE /W4)
-    target_compile_options(devclean_formatter_tests PRIVATE /W4)
-    target_compile_options(devclean_config_tests PRIVATE /W4)
-    target_compile_options(devclean_scanner_tests PRIVATE /W4)
-    target_compile_options(devclean_benchmark PRIVATE /W4)
-else()
-    target_compile_options(devclean_core PRIVATE -Wall -Wextra -Wpedantic)
-    target_compile_options(devclean PRIVATE -Wall -Wextra -Wpedantic)
-    target_compile_options(devclean_tests PRIVATE -Wall -Wextra -Wpedantic)
-    target_compile_options(devclean_parser_tests PRIVATE -Wall -Wextra -Wpedantic)
-    target_compile_options(devclean_formatter_tests PRIVATE -Wall -Wextra -Wpedantic)
-    target_compile_options(devclean_config_tests PRIVATE -Wall -Wextra -Wpedantic)
-    target_compile_options(devclean_scanner_tests PRIVATE -Wall -Wextra -Wpedantic)
-    target_compile_options(devclean_benchmark PRIVATE -Wall -Wextra -Wpedantic)
+    devclean_enable_sanitizers(devclean_core)
+    foreach(target
+        devclean
+        devclean_tests
+        devclean_parser_tests
+        devclean_formatter_tests
+        devclean_config_tests
+        devclean_scanner_tests
+        devclean_scan_result_tests
+        devclean_benchmark)
+        devclean_enable_sanitizers(${target})
+    endforeach()
 endif()
 
 find_program(CLANG_FORMAT_EXECUTABLE NAMES clang-format)

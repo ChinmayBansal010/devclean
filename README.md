@@ -5,9 +5,12 @@
 ## Highlights
 
 - Registry-driven cache definitions with plugin and config overrides
-- Scan, analyze, stats, clean, and version commands
+- Scan, analyze, stats, clean, doctor, and version commands
+- Target-based cleanup and stale-file cleanup
+- Safe cleanup mode that excludes active, warned, and protected locations
 - Interactive cleanup with JSON output for automation
 - Safety checks for active Docker, IDE, and package-manager workflows
+- Developer-environment diagnostics with `devclean doctor`
 - Report export in Markdown, HTML, CSV, and JSON
 - Native cache-path resolution for common developer tools
 - Release packaging for Linux, Windows, and macOS workflows
@@ -51,8 +54,6 @@ When you build with the vcpkg toolchain, `nlohmann-json` is installed automatica
 - `nlohmann_json`
 - Optional: `vcpkg` for reproducible dependency management
 
-The build falls back to `FetchContent` when `nlohmann_json` is not preinstalled, but vcpkg is the recommended way to install and manage C++ dependencies consistently across platforms.
-
 ### Optional package installs
 
 - Debian/Ubuntu: `sudo apt install cmake g++`
@@ -79,9 +80,35 @@ devclean scan
 devclean scan --category python
 devclean analyze --report json
 devclean clean --dry-run --exclude npm
+devclean clean --safe --target 10GB
+devclean clean --safe --stale 30d
+devclean doctor
+devclean doctor --json
 devclean stats --json
 devclean version
 ```
+
+### Cleanup controls
+
+`--target` limits a cleanup operation to the requested amount of cache data. For example:
+
+```bash
+devclean clean --safe --target 10GB
+```
+
+`--stale` switches cleanup to file-level removal and only removes files older than the requested duration:
+
+```bash
+devclean clean --safe --stale 30d
+```
+
+Supported duration units are seconds (`s`), minutes (`m`), hours (`h`), days (`d`), and weeks (`w`).
+
+`--safe` excludes caches marked active, caches with active-tool warnings, and protected filesystem locations.
+
+### Developer diagnostics
+
+`devclean doctor` checks common developer tools and reports whether they are installed and currently running. Use `--json` for automation and scripts.
 
 ### Example output
 
@@ -97,6 +124,8 @@ For the full command and option reference, see [CLI Reference](docs/cli.md).
 - home directories
 - Windows system roots
 - `Program Files`
+
+Safe cleanup adds another layer by excluding active caches and locations associated with running tools or safety warnings.
 
 Plugins and config-defined cache paths must be absolute and must not point at protected directories.
 

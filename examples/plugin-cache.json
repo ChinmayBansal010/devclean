@@ -1,0 +1,9 @@
+{
+  "name": "example-tool",
+  "aliases": ["example"],
+  "category": "build",
+  "linux_path": "~/.cache/example-tool",
+  "windows_path": "%LOCALAPPDATA%/example-tool",
+  "environment_variables": ["EXAMPLE_TOOL_HOME"],
+  "enabled": true
+}

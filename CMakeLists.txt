@@ -6,7 +6,8 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-option(ENABLE_SANITIZERS "Build with AddressSanitizer and UBSan" OFF)
+option(DEVCLEAN_ENABLE_SANITIZERS "Build with AddressSanitizer and UBSan" OFF)
+option(ENABLE_SANITIZERS "Compatibility alias for sanitizer builds" OFF)
 
 include(GNUInstallDirs)
 include_directories(include)
@@ -102,7 +103,7 @@ endif()
 
 include(CPack)
 
-if(ENABLE_SANITIZERS)
+if(DEVCLEAN_ENABLE_SANITIZERS OR ENABLE_SANITIZERS)
     devclean_enable_sanitizers(devclean_core)
     foreach(target
         devclean

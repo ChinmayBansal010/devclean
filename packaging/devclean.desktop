@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=DevClean
+Comment=Inspect and clean developer caches
+Exec=devclean scan
+Terminal=true
+Categories=Development;System;

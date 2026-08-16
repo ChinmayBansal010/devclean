@@ -6,7 +6,7 @@
 #include <filesystem>
 #include <sstream>
 #include <string>
-#include <unordered_map>
+#include <utility>
 #include <vector>
 
 #ifdef _WIN32
@@ -98,28 +98,14 @@ std::vector<std::string> ToolDetector::getWarningsForCache(const std::string& ca
     return warnings;
 }
 
-std::vector<ToolStatus> ToolDetector::getEnvironmentReport() const
+std::vector<ToolStatus> ToolDetector::getEnvironmentReport()
 {
     const std::vector<std::pair<std::string, std::string>> tools = {
-        {"git", "git"},
-        {"cmake", "cmake"},
-        {"gcc", "gcc"},
-        {"g++", "g++"},
-        {"clang", "clang"},
-        {"python", "python3"},
-        {"node", "node"},
-        {"npm", "npm"},
-        {"pnpm", "pnpm"},
-        {"yarn", "yarn"},
-        {"cargo", "cargo"},
-        {"rustc", "rustc"},
-        {"java", "java"},
-        {"gradle", "gradle"},
-        {"mvn", "mvn"},
-        {"docker", "docker"},
-        {"podman", "podman"},
-        {"code", "code"},
-        {"clang-format", "clang-format"},
+        {"git", "git"}, {"cmake", "cmake"}, {"gcc", "gcc"}, {"g++", "g++"},
+        {"clang", "clang"}, {"python", "python3"}, {"node", "node"}, {"npm", "npm"},
+        {"pnpm", "pnpm"}, {"yarn", "yarn"}, {"cargo", "cargo"}, {"rustc", "rustc"},
+        {"java", "java"}, {"gradle", "gradle"}, {"mvn", "mvn"}, {"docker", "docker"},
+        {"podman", "podman"}, {"code", "code"}, {"clang-format", "clang-format"},
         {"clang-tidy", "clang-tidy"}
     };
 
@@ -131,7 +117,7 @@ std::vector<ToolStatus> ToolDetector::getEnvironmentReport() const
         status.name = label;
         status.installed = isInstalled(executable);
         status.running = isRunning(executable);
-        report.push_back(std::move(status));
+        report.push_back(status);
     }
     return report;
 }

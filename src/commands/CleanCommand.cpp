@@ -130,7 +130,7 @@ std::vector<ScanResult> applyTarget(const std::vector<ScanResult>& candidates, u
     uint64_t planned = 0;
     for (const auto& candidate : ordered)
     {
-        if (candidate.bytes == 0 || planned + candidate.bytes > targetBytes)
+        if (candidate.bytes == 0 || candidate.bytes > targetBytes - planned)
             continue;
         selected.push_back(candidate);
         planned += candidate.bytes;
@@ -191,7 +191,7 @@ std::vector<ScanResult> selectCandidates(const std::vector<ScanResult>& candidat
     return selected;
 }
 
-} // namespace
+}
 
 int CleanCommand::execute(const ParsedArgs& args)
 {
@@ -305,10 +305,13 @@ int CleanCommand::execute(const ParsedArgs& args)
         totalBytesRemoved += cleanResult.bytesRemoved;
         totalFilesRemoved += cleanResult.filesRemoved;
 
-        if (args.targetSizeBytes > 0 && cleanResult.bytesRemoved < remainingTarget)
-            remainingTarget -= cleanResult.bytesRemoved;
-        else if (args.targetSizeBytes > 0)
-            remainingTarget = 0;
+        if (args.targetSizeBytes > 0)
+        {
+            if (cleanResult.bytesRemoved >= remainingTarget)
+                remainingTarget = 0;
+            else
+                remainingTarget -= cleanResult.bytesRemoved;
+        }
 
         if (cleanResult.success)
             std::cout << "[OK]   " << candidate.name << "\n";

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <unordered_set>
 #include <vector>
 
 struct ToolStatus
@@ -22,7 +21,7 @@ public:
     bool isIdeRunning();
     bool hasActivePackageManager();
     std::vector<std::string> getWarningsForCache(const std::string& cacheName);
-    std::vector<ToolStatus> getEnvironmentReport() const;
+    std::vector<ToolStatus> getEnvironmentReport();
 
 private:
     ToolDetector() = default;

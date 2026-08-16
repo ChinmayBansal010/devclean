@@ -39,7 +39,7 @@ CleanResult CleanEngine::removeStaleFiles(const fs::path& path, uint64_t staleSe
                 continue;
 
             const uint64_t bytes = static_cast<uint64_t>(it->file_size());
-            if (targetBytes > 0 && result.bytesRemoved + bytes > targetBytes)
+            if (targetBytes > 0 && bytes > targetBytes - result.bytesRemoved)
                 continue;
 
             std::error_code ec;

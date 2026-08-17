@@ -19,6 +19,9 @@ enable_testing()
 
 find_package(nlohmann_json CONFIG REQUIRED)
 
+file(GLOB DEVCLEAN_ENGINE_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/engine/*.cpp")
+
 add_library(devclean_core
     src/core/Application.cpp
     src/core/CacheInsights.cpp
@@ -28,6 +31,7 @@ add_library(devclean_core
     src/core/CommandDispatcher.cpp
     src/core/Config.cpp
     src/core/ScanHistory.cpp
+    ${DEVCLEAN_ENGINE_SOURCES}
 
     src/commands/AnalyzeCommand.cpp
     src/commands/DashboardCommand.cpp
@@ -143,7 +147,7 @@ endif()
 find_program(CLANG_TIDY_EXECUTABLE NAMES clang-tidy)
 if(CLANG_TIDY_EXECUTABLE)
     add_custom_target(tidy
-        COMMAND ${CLANG_TIDY_EXECUTABLE} -p ${CMAKE_BINARY_DIR} src/main.cpp src/core/*.cpp src/commands/*.cpp src/scanner/*.cpp src/platform/*.cpp src/cleaner/*.cpp src/utils/*.cpp tests/cli_tests.cpp tests/unit/*.cpp
+        COMMAND ${CLANG_TIDY_EXECUTABLE} -p ${CMAKE_BINARY_DIR} src/main.cpp src/core/*.cpp src/commands/*.cpp src/scanner/*.cpp src/platform/*.cpp src/cleaner/*.cpp src/utils/*.cpp src/engine/*.cpp tests/cli_tests.cpp tests/unit/*.cpp
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 endif()
 

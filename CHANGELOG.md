@@ -2,6 +2,43 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-08-17
+
+### 🚀 New Capabilities
+
+- Added `devclean doctor` for developer-environment diagnostics.
+- Added target-based cleanup with `--target`.
+- Added stale-file cleanup with `--stale`.
+- Added safe cleanup mode with `--safe`.
+- Added `recommend` cache health scoring and ranked cleanup guidance.
+- Added the interactive cache health `dashboard`.
+- Added reusable storage budget calculations and deterministic cleanup planning.
+- Added cache policy scoring for safety, activity, age, size, and growth.
+- Added historical scan diffing and cache growth projection primitives.
+- Added centralized path safety inspection and stale-file indexing.
+- Added resilient directory size estimation for permission-heavy filesystems.
+- Added cleanup operation manifests for future audit and recovery workflows.
+- Added a normalized report model for stable output generation.
+- Added developer environment summary structures.
+- Added duplicate-file candidate grouping for future reclaimable-space analysis.
+
+### 🧱 Engineering Improvements
+
+- Centralized the release version at the CMake project definition and exposed it through `${PROJECT_VERSION}`.
+- Expanded the reusable analysis layer under `src/engine`.
+- Added CMake `CONFIGURE_DEPENDS` discovery for analysis engine sources.
+- Preserved existing CLI behavior while introducing reusable analysis primitives.
+- Kept filesystem safety decisions separate from destructive cleanup execution.
+
+### 🔧 Fixes and Improvements
+
+- Improved cross-platform cache path resolution and tool detection.
+- Respected cache-specific environment variables when resolving configured paths.
+- Optimized scanning by limiting work to requested cache definitions.
+- Applied scan filters consistently across built-in, custom, and plugin caches.
+- Fixed Windows debug scan failures and improved Windows path handling in CLI tests.
+- Normalized Windows paths in tests to make filesystem comparisons reliable across path formats.
+
 ## [1.0.1] - 2026-08-08
 
 ### 🔧 Fixes and Improvements

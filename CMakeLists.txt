@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(devclean VERSION 1.0.1 LANGUAGES CXX)
+project(devclean VERSION 1.2.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -22,6 +22,7 @@ find_package(nlohmann_json CONFIG REQUIRED)
 add_library(devclean_core
     src/core/Application.cpp
     src/core/CacheInsights.cpp
+    src/core/StorageBudget.cpp
     src/core/ArgumentParser.cpp
     src/core/CommandDispatcher.cpp
     src/core/Config.cpp

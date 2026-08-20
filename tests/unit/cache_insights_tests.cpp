@@ -20,5 +20,6 @@ int main()
     assert(insights.recommendations.front().name == "cargo"); assert(insights.recommendations.front().priority >= insights.recommendations.back().priority);
     assert(cacheHealthLabel(100) == "Excellent"); assert(cacheHealthLabel(89) == "Healthy"); assert(cacheHealthLabel(74) == "Watch"); assert(cacheHealthLabel(59) == "At risk"); assert(cacheHealthLabel(39) == "Critical");
     assert(insights.recommendations.front().safe); assert(!insights.recommendations.back().safe);
+    assert(insights.largestCaches.front().first == "cargo");
     return 0;
 }

@@ -17,7 +17,7 @@ int main()
     cargo.active = false;
     cargo.location = std::filesystem::temp_directory_path() / "devclean-cache-insights" / "cargo";
     cargo.age = std::chrono::hours(24 * 120);
-    cargo.growthBytes = 512LL * 1024LL * 1024LL;
+    cargo.growthBytes = 512LL * 1024ULL * 1024ULL;
 
     ScanResult npm;
     npm.name = "npm";
@@ -59,6 +59,7 @@ int main()
     assert(insights.recommendations.front().name == "cargo");
     assert(insights.recommendations.front().priority >= insights.recommendations.back().priority);
     assert(cacheHealthLabel(100) == "Excellent");
+    assert(cacheHealthLabel(89) == "Healthy");
 
     return 0;
 }

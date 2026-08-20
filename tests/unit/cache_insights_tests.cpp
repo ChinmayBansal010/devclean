@@ -24,12 +24,18 @@ int main()
     assert(insights.latestGrowthPercent > 0.0); assert(insights.latestGrowthPercent < 100.0); assert(insights.health.factors.size() >= 2); assert(insights.health.factors.front().find("disk usage") != std::string::npos);
 
     const CacheInsights empty = buildCacheInsights({}, {});
-    assert(empty.foundCount == 0);
-    assert(empty.totalBytes == 0);
-    assert(empty.health.score == 100);
-    assert(empty.health.label == "Excellent");
-    assert(empty.recommendations.empty());
-    assert(empty.history.empty());
+    assert(empty.foundCount == 0); assert(empty.totalBytes == 0); assert(empty.health.score == 100); assert(empty.health.label == "Excellent"); assert(empty.recommendations.empty()); assert(empty.history.empty());
+
+    std::vector<ScanSnapshot> longHistory;
+    for (int i = 0; i < 8; ++i)
+    {
+        ScanSnapshot snapshot;
+        snapshot.timestamp = now - std::chrono::hours(24 * i);
+        snapshot.totalBytes = static_cast<uint64_t>(i + 1) * 100;
+        longHistory.push_back(snapshot);
+    }
+    const CacheInsights limited = buildCacheInsights({}, longHistory);
+    assert(limited.history.size() == 6);
 
     return 0;
 }

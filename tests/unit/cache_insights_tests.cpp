@@ -21,5 +21,6 @@ int main()
     assert(cacheHealthLabel(100) == "Excellent"); assert(cacheHealthLabel(89) == "Healthy"); assert(cacheHealthLabel(74) == "Watch"); assert(cacheHealthLabel(59) == "At risk"); assert(cacheHealthLabel(39) == "Critical");
     assert(insights.recommendations.front().safe); assert(!insights.recommendations.back().safe); assert(insights.largestCaches.front().first == "cargo"); assert(insights.cacheGrowth.front().first == "cargo");
     assert(insights.history.front().totalBytes == latest.totalBytes); assert(insights.history.front().deltaBytes == static_cast<int64_t>(latest.totalBytes) - static_cast<int64_t>(previous.totalBytes));
+    assert(insights.latestGrowthPercent > 0.0);
     return 0;
 }

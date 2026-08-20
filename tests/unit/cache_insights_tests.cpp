@@ -22,5 +22,6 @@ int main()
     assert(insights.recommendations.front().safe); assert(!insights.recommendations.back().safe); assert(insights.largestCaches.front().first == "cargo"); assert(insights.cacheGrowth.front().first == "cargo");
     assert(insights.history.front().totalBytes == latest.totalBytes); assert(insights.history.front().deltaBytes == static_cast<int64_t>(latest.totalBytes) - static_cast<int64_t>(previous.totalBytes));
     assert(insights.latestGrowthPercent > 0.0); assert(insights.latestGrowthPercent < 100.0); assert(insights.health.factors.size() >= 2);
+    assert(insights.health.factors.front().find("disk usage") != std::string::npos);
     return 0;
 }

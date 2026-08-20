@@ -58,6 +58,7 @@ int main()
     assert(!insights.recommendations.empty());
     assert(insights.recommendations.front().name == "cargo");
     assert(insights.recommendations.front().priority >= insights.recommendations.back().priority);
+    assert(cacheHealthLabel(100) == "Excellent");
 
     return 0;
 }

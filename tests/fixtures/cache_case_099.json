@@ -1,0 +1,1 @@
+{"case":99,"scenario":"config_precedence","size_bytes":57344,"age_days":28,"active":false,"protected":false,"precedence":["cli","user","plugin","default"]}

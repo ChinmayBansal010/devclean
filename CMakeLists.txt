@@ -68,6 +68,18 @@ add_executable(devclean_scanner_tests tests/unit/scanner_tests.cpp)
 add_executable(devclean_scan_result_tests tests/unit/scan_result_tests.cpp)
 add_executable(devclean_cache_insights_tests tests/unit/cache_insights_tests.cpp)
 add_executable(devclean_doctor_tests tests/unit/doctor_tests.cpp)
+
+file(GLOB DEVCLEAN_FOCUSED_TEST_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/focused/*.cpp")
+foreach(test_source ${DEVCLEAN_FOCUSED_TEST_SOURCES})
+    get_filename_component(test_name ${test_source} NAME_WE)
+    set(test_target "devclean_${test_name}")
+    add_executable(${test_target} ${test_source})
+    target_link_libraries(${test_target} PRIVATE devclean_core)
+    devclean_enable_warnings(${test_target})
+    add_test(NAME "devclean.focused.${test_name}" COMMAND ${test_target})
+endforeach()
+
 add_executable(devclean_benchmark src/benchmark.cpp)
 
 foreach(target
@@ -140,14 +152,14 @@ endif()
 find_program(CLANG_FORMAT_EXECUTABLE NAMES clang-format)
 if(CLANG_FORMAT_EXECUTABLE)
     add_custom_target(format
-        COMMAND ${CLANG_FORMAT_EXECUTABLE} -i src/*.cpp src/*/*.cpp include/*.hpp include/*/*.hpp tests/*.cpp tests/unit/*.cpp
+        COMMAND ${CLANG_FORMAT_EXECUTABLE} -i src/*.cpp src/*/*.cpp include/*.hpp include/*/*.hpp tests/*.cpp tests/unit/*.cpp tests/focused/*.cpp
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 endif()
 
 find_program(CLANG_TIDY_EXECUTABLE NAMES clang-tidy)
 if(CLANG_TIDY_EXECUTABLE)
     add_custom_target(tidy
-        COMMAND ${CLANG_TIDY_EXECUTABLE} -p ${CMAKE_BINARY_DIR} src/main.cpp src/core/*.cpp src/commands/*.cpp src/scanner/*.cpp src/platform/*.cpp src/cleaner/*.cpp src/utils/*.cpp src/engine/*.cpp tests/cli_tests.cpp tests/unit/*.cpp
+        COMMAND ${CLANG_TIDY_EXECUTABLE} -p ${CMAKE_BINARY_DIR} src/main.cpp src/core/*.cpp src/commands/*.cpp src/scanner/*.cpp src/platform/*.cpp src/cleaner/*.cpp src/utils/*.cpp src/engine/*.cpp tests/cli_tests.cpp tests/unit/*.cpp tests/focused/*.cpp
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 endif()
 

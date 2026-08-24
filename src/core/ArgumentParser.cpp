@@ -26,78 +26,62 @@ bool hasValue(int index, int argc, char* argv[])
     return index + 1 < argc && !isOption(argv[index + 1]);
 }
 
+bool inlineValue(const std::string& token, const std::string& option, std::string& value)
+{
+    const std::string prefix = option + "=";
+    if (token.rfind(prefix, 0) != 0)
+        return false;
+    value = token.substr(prefix.size());
+    return true;
+}
+
 uint64_t parseSize(const std::string& value)
 {
     const std::string normalized = normalize(value);
     std::size_t suffixStart = 0;
-    while (suffixStart < normalized.size() && std::isdigit(static_cast<unsigned char>(normalized[suffixStart])))
-        ++suffixStart;
-
-    if (suffixStart == 0)
-        return 0;
+    while (suffixStart < normalized.size() && std::isdigit(static_cast<unsigned char>(normalized[suffixStart]))) ++suffixStart;
+    if (suffixStart == 0) return 0;
 
     uint64_t multiplier = 1;
     const std::string suffix = normalized.substr(suffixStart);
-    if (suffix == "kb")
-        multiplier = 1024ULL;
-    else if (suffix == "mb")
-        multiplier = 1024ULL * 1024ULL;
-    else if (suffix == "gb")
-        multiplier = 1024ULL * 1024ULL * 1024ULL;
-    else if (suffix == "tb")
-        multiplier = 1024ULL * 1024ULL * 1024ULL * 1024ULL;
-    else if (!suffix.empty() && suffix != "b")
-        return 0;
+    if (suffix == "kb") multiplier = 1024ULL;
+    else if (suffix == "mb") multiplier = 1024ULL * 1024ULL;
+    else if (suffix == "gb") multiplier = 1024ULL * 1024ULL * 1024ULL;
+    else if (suffix == "tb") multiplier = 1024ULL * 1024ULL * 1024ULL * 1024ULL;
+    else if (!suffix.empty() && suffix != "b") return 0;
 
     try
     {
         const uint64_t base = std::stoull(normalized.substr(0, suffixStart));
-        if (base > std::numeric_limits<uint64_t>::max() / multiplier)
-            return 0;
+        if (base > std::numeric_limits<uint64_t>::max() / multiplier) return 0;
         return base * multiplier;
     }
-    catch (...)
-    {
-        return 0;
-    }
+    catch (...) { return 0; }
 }
 
 uint64_t parseDuration(const std::string& value)
 {
     const std::string normalized = normalize(value);
     std::size_t suffixStart = 0;
-    while (suffixStart < normalized.size() && std::isdigit(static_cast<unsigned char>(normalized[suffixStart])))
-        ++suffixStart;
-
-    if (suffixStart == 0)
-        return 0;
+    while (suffixStart < normalized.size() && std::isdigit(static_cast<unsigned char>(normalized[suffixStart]))) ++suffixStart;
+    if (suffixStart == 0) return 0;
 
     uint64_t multiplier = 1;
     const std::string suffix = normalized.substr(suffixStart);
-    if (suffix == "s")
-        multiplier = 1;
-    else if (suffix == "m")
-        multiplier = 60ULL;
-    else if (suffix == "h")
-        multiplier = 60ULL * 60ULL;
-    else if (suffix == "d")
-        multiplier = 24ULL * 60ULL * 60ULL;
-    else if (suffix == "w")
-        multiplier = 7ULL * 24ULL * 60ULL * 60ULL;
-    else
-        return 0;
+    if (suffix == "s") multiplier = 1;
+    else if (suffix == "m") multiplier = 60ULL;
+    else if (suffix == "h") multiplier = 60ULL * 60ULL;
+    else if (suffix == "d") multiplier = 24ULL * 60ULL * 60ULL;
+    else if (suffix == "w") multiplier = 7ULL * 24ULL * 60ULL * 60ULL;
+    else return 0;
 
     try
     {
         const uint64_t base = std::stoull(normalized.substr(0, suffixStart));
-        if (base > std::numeric_limits<uint64_t>::max() / multiplier)
-            return 0;
+        if (base > std::numeric_limits<uint64_t>::max() / multiplier) return 0;
         return base * multiplier;
     }
-    catch (...)
-    {
-        return 0;
-    }
+    catch (...) { return 0; }
 }
 
 }
@@ -110,71 +94,53 @@ ParsedArgs ArgumentParser::parse(int argc, char* argv[])
     {
         const std::string token = argv[i];
         const std::string lower = normalize(token);
+        std::string value;
 
-        if (token == "--json")
-            args.json = true;
-        else if (token == "--verbose")
-            args.verbose = true;
-        else if (token == "--dry-run")
-            args.dryRun = true;
-        else if (token == "--force")
-            args.force = true;
-        else if (token == "--safe")
-            args.safe = true;
-        else if (token == "--active-only")
-            args.activeOnly = true;
-        else if (token == "--min-size")
+        if (token == "--json") args.json = true;
+        else if (token == "--verbose") args.verbose = true;
+        else if (token == "--dry-run") args.dryRun = true;
+        else if (token == "--force") args.force = true;
+        else if (token == "--safe") args.safe = true;
+        else if (token == "--active-only") args.activeOnly = true;
+        else if (token == "--min-size" || inlineValue(token, "--min-size", value))
         {
-            if (hasValue(i, argc, argv))
-                args.minSizeBytes = parseSize(argv[++i]);
+            if (!value.empty() || hasValue(i, argc, argv)) args.minSizeBytes = parseSize(value.empty() ? argv[++i] : value);
         }
-        else if (token == "--max-size")
+        else if (token == "--max-size" || inlineValue(token, "--max-size", value))
         {
-            if (hasValue(i, argc, argv))
-                args.maxSizeBytes = parseSize(argv[++i]);
+            if (!value.empty() || hasValue(i, argc, argv)) args.maxSizeBytes = parseSize(value.empty() ? argv[++i] : value);
         }
-        else if (token == "--target")
+        else if (token == "--target" || inlineValue(token, "--target", value))
         {
-            if (hasValue(i, argc, argv))
-                args.targetSizeBytes = parseSize(argv[++i]);
+            if (!value.empty() || hasValue(i, argc, argv)) args.targetSizeBytes = parseSize(value.empty() ? argv[++i] : value);
         }
-        else if (token == "--stale")
+        else if (token == "--stale" || inlineValue(token, "--stale", value))
         {
-            if (hasValue(i, argc, argv))
-                args.staleSeconds = parseDuration(argv[++i]);
+            if (!value.empty() || hasValue(i, argc, argv)) args.staleSeconds = parseDuration(value.empty() ? argv[++i] : value);
         }
-        else if (token == "--help" || token == "-h")
-            args.help = true;
-        else if (token == "--version" || token == "-V")
-            args.version = true;
-        else if (token == "--category")
+        else if (token == "--help" || token == "-h") args.help = true;
+        else if (token == "--version" || token == "-V") args.version = true;
+        else if (token == "--category" || inlineValue(token, "--category", value))
         {
-            if (hasValue(i, argc, argv))
-                args.category = normalize(argv[++i]);
+            if (!value.empty() || hasValue(i, argc, argv)) args.category = normalize(value.empty() ? argv[++i] : value);
         }
-        else if (token == "--exclude")
+        else if (token == "--exclude" || inlineValue(token, "--exclude", value))
         {
-            if (hasValue(i, argc, argv))
-                args.excludes.emplace_back(normalize(argv[++i]));
+            if (!value.empty() || hasValue(i, argc, argv)) args.excludes.emplace_back(normalize(value.empty() ? argv[++i] : value));
         }
-        else if (token == "--sort")
+        else if (token == "--sort" || inlineValue(token, "--sort", value))
         {
-            if (hasValue(i, argc, argv))
-                args.sort = normalize(argv[++i]);
+            if (!value.empty() || hasValue(i, argc, argv)) args.sort = normalize(value.empty() ? argv[++i] : value);
         }
-        else if (token == "--report")
+        else if (token == "--report" || inlineValue(token, "--report", value))
         {
-            if (hasValue(i, argc, argv))
-                args.reportFormat = normalize(argv[++i]);
+            if (!value.empty() || hasValue(i, argc, argv)) args.reportFormat = normalize(value.empty() ? argv[++i] : value);
         }
-        else if (token == "--reverse")
-            args.reverse = true;
+        else if (token == "--reverse") args.reverse = true;
         else if (!isOption(token))
         {
-            if (args.command.empty())
-                args.command = lower;
-            else
-                args.targets.emplace_back(lower);
+            if (args.command.empty()) args.command = lower;
+            else args.targets.emplace_back(lower);
         }
     }
 

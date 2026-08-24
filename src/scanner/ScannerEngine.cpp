@@ -59,7 +59,13 @@ std::filesystem::path resolveConfiguredPath(const CacheDefinition& cache)
         const char* rawValue = std::getenv(envVar.c_str());
         if (rawValue == nullptr || *rawValue == '\0') continue;
         std::filesystem::path candidate = expandUserPath(rawValue);
-        if (!candidate.is_absolute()) candidate = std::filesystem::absolute(candidate);
+        if (!candidate.is_absolute())
+        {
+            std::error_code error;
+            const auto absolute = std::filesystem::absolute(candidate, error);
+            if (error) continue;
+            candidate = absolute;
+        }
         const auto suffix = environmentPathSuffix(envVar);
         return suffix.empty() ? candidate : candidate / suffix;
     }
@@ -102,7 +108,6 @@ std::vector<ScanResult> ScannerEngine::scan(const std::vector<std::string>& filt
 {
     std::vector<ScanResult> results;
     auto caches = mergeCaches(CacheRegistry::getCaches(), config.customCaches);
-
     if (!filters.empty())
         caches.erase(std::remove_if(caches.begin(), caches.end(), [&](const CacheDefinition& cache) {
             return !std::any_of(filters.begin(), filters.end(), [&](const std::string& filter) {
@@ -121,7 +126,6 @@ std::vector<ScanResult> ScannerEngine::scan(const std::vector<std::string>& filt
                 })) filteredPlugins.push_back(plugin);
         plugins = std::move(filteredPlugins);
     }
-
     caches = mergeCaches(caches, plugins);
     results.reserve(caches.size());
     const auto history = ScanHistory::getInstance().getHistory(2);
@@ -141,7 +145,6 @@ std::vector<ScanResult> ScannerEngine::scan(const std::vector<std::string>& filt
         if (!result.active)
             result.active = std::any_of(cache.aliases.begin(), cache.aliases.end(), [](const std::string& alias) { return ToolDetector::getInstance().isInstalled(alias); });
         result.warnings = ToolDetector::getInstance().getWarningsForCache(cache.name);
-
         const std::string normalizedName = normalize(result.name);
         if (std::any_of(config.disabledCaches.begin(), config.disabledCaches.end(), [&](const std::string& disabled) { return normalize(disabled) == normalizedName; }) ||
             std::any_of(config.ignoredCaches.begin(), config.ignoredCaches.end(), [&](const std::string& ignored) { return normalize(ignored) == normalizedName; }))
@@ -157,7 +160,6 @@ std::vector<ScanResult> ScannerEngine::scan(const std::vector<std::string>& filt
             results.push_back(std::move(result));
             continue;
         }
-
         const auto summary = Filesystem::inspectDirectory(path);
         result.found = summary.exists;
         result.bytes = summary.bytes;
@@ -184,9 +186,6 @@ std::vector<ScanResult> ScannerEngine::scan(const std::vector<std::string>& filt
     std::vector<ScanResult> filtered;
     filtered.reserve(results.size());
     for (const auto& result : results)
-    {
-        if (result.skipped || filters.empty() || std::any_of(filters.begin(), filters.end(), [&](const std::string& filter) { return matchesQuery(result, filter); }))
-            filtered.push_back(result);
-    }
+        if (result.skipped || filters.empty() || std::any_of(filters.begin(), filters.end(), [&](const std::string& filter) { return matchesQuery(result, filter); })) filtered.push_back(result);
     return filtered;
 }

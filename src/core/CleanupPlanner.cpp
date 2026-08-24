@@ -1,31 +1,11 @@
 #include "core/CleanupPlanner.hpp"
 
-#include "platform/Filesystem.hpp"
+#include "core/CleanupPolicy.hpp"
 
 #include <algorithm>
 #include <limits>
 
 namespace {
-
-bool isSafe(const ScanResult& result)
-{
-    return result.found && !result.active && result.warnings.empty() &&
-           !Filesystem::isProtectedPath(result.location);
-}
-
-int priorityFor(const ScanResult& result, bool safe)
-{
-    int priority = safe ? 100 : 40;
-    if (result.growthBytes > 0)
-        priority += 20;
-    if (result.bytes >= 1024ULL * 1024ULL * 1024ULL)
-        priority += 10;
-    if (result.active)
-        priority -= 30;
-    if (!result.warnings.empty())
-        priority -= 20;
-    return std::max(0, priority);
-}
 
 std::size_t bestCandidate(const std::vector<CleanupPlanItem>& candidates,
                           const std::vector<bool>& selected,
@@ -64,7 +44,7 @@ std::size_t bestCandidate(const std::vector<CleanupPlanItem>& candidates,
     return best;
 }
 
-} // namespace
+}
 
 CleanupPlan buildCleanupPlan(const std::vector<ScanResult>& results,
                              uint64_t targetBytes,
@@ -76,18 +56,15 @@ CleanupPlan buildCleanupPlan(const std::vector<ScanResult>& results,
     std::vector<CleanupPlanItem> candidates;
     for (const auto& result : results)
     {
-        if (!result.found || result.bytes == 0)
+        if (!cleanupCandidateMatches(result, safeOnly))
             continue;
 
-        const bool safe = isSafe(result);
-        if (safeOnly && !safe)
-            continue;
-
+        const bool safe = isCleanupSafe(result);
         CleanupPlanItem item;
         item.name = result.name;
-        item.bytes = result.bytes;
+        item.bytes = cleanupEffectiveBytes(result);
         item.safe = safe;
-        item.priority = priorityFor(result, safe);
+        item.priority = cleanupPriority(result, safe);
         item.reason = safe ? "inactive and unprotected" : "requires explicit review";
         candidates.push_back(std::move(item));
     }

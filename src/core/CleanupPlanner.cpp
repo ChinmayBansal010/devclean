@@ -3,6 +3,7 @@
 #include "platform/Filesystem.hpp"
 
 #include <algorithm>
+#include <limits>
 
 namespace {
 
@@ -24,6 +25,43 @@ int priorityFor(const ScanResult& result, bool safe)
     if (!result.warnings.empty())
         priority -= 20;
     return std::max(0, priority);
+}
+
+std::size_t bestCandidate(const std::vector<CleanupPlanItem>& candidates,
+                          const std::vector<bool>& selected,
+                          uint64_t remaining)
+{
+    std::size_t best = candidates.size();
+    uint64_t bestBytes = 0;
+
+    for (std::size_t i = 0; i < candidates.size(); ++i)
+    {
+        if (selected[i])
+            continue;
+        const uint64_t bytes = candidates[i].bytes;
+        if (bytes <= remaining && bytes >= bestBytes)
+        {
+            best = i;
+            bestBytes = bytes;
+        }
+    }
+
+    if (best != candidates.size())
+        return best;
+
+    uint64_t smallestOvershoot = std::numeric_limits<uint64_t>::max();
+    for (std::size_t i = 0; i < candidates.size(); ++i)
+    {
+        if (selected[i] || candidates[i].bytes < remaining)
+            continue;
+        if (candidates[i].bytes < smallestOvershoot)
+        {
+            smallestOvershoot = candidates[i].bytes;
+            best = i;
+        }
+    }
+
+    return best;
 }
 
 } // namespace
@@ -71,12 +109,17 @@ CleanupPlan buildCleanupPlan(const std::vector<ScanResult>& results,
         return plan;
     }
 
-    for (const auto& item : candidates)
+    std::vector<bool> selected(candidates.size(), false);
+    while (plan.plannedBytes < targetBytes)
     {
-        if (plan.plannedBytes >= targetBytes)
+        const uint64_t remaining = targetBytes - plan.plannedBytes;
+        const std::size_t index = bestCandidate(candidates, selected, remaining);
+        if (index == candidates.size())
             break;
-        plan.items.push_back(item);
-        plan.plannedBytes += item.bytes;
+
+        selected[index] = true;
+        plan.items.push_back(candidates[index]);
+        plan.plannedBytes += candidates[index].bytes;
     }
 
     plan.targetReached = plan.plannedBytes >= targetBytes;

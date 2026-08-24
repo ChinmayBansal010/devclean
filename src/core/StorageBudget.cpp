@@ -32,6 +32,9 @@ StorageBudget calculateStorageBudget(uint64_t limitBytes,
 
 std::vector<StorageBudgetItem> rankBudgetCandidates(std::vector<StorageBudgetItem> items)
 {
+    for (auto& item : items)
+        item.reclaimableBytes = std::min(item.reclaimableBytes, item.bytes);
+
     std::stable_sort(items.begin(), items.end(), [](const StorageBudgetItem& lhs,
                                                      const StorageBudgetItem& rhs) {
         if (lhs.safe != rhs.safe)

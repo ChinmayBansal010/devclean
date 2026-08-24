@@ -10,7 +10,7 @@ std::string formatValue(double size, const char* unit)
     out << std::fixed << std::setprecision(2) << size << ' ' << unit;
     return out.str();
 }
-} // namespace
+}
 
 std::string Formatter::formatBytes(uint64_t bytes)
 {
@@ -26,6 +26,15 @@ std::string Formatter::formatBytes(uint64_t bytes)
     }
 
     return formatValue(size, units[unit]);
+}
+
+std::string Formatter::formatSignedBytes(int64_t bytes)
+{
+    const bool negative = bytes < 0;
+    const uint64_t magnitude = negative
+        ? static_cast<uint64_t>(-(bytes + 1)) + 1
+        : static_cast<uint64_t>(bytes);
+    return (negative ? "-" : "+") + formatBytes(magnitude);
 }
 
 std::string Formatter::formatPath(const std::filesystem::path& path)

@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <nlohmann/json.hpp>
 #include <vector>
@@ -15,6 +16,13 @@
 namespace {
 
 using CategoryStat = std::pair<std::string, std::pair<uint64_t, std::size_t>>;
+
+uint64_t saturatingAdd(uint64_t lhs, uint64_t rhs)
+{
+    if (rhs > std::numeric_limits<uint64_t>::max() - lhs)
+        return std::numeric_limits<uint64_t>::max();
+    return lhs + rhs;
+}
 
 std::vector<CategoryStat> sortCategories(
     const std::map<std::string, uint64_t>& categoryBytes,
@@ -81,16 +89,16 @@ int StatsCommand::execute(const ParsedArgs& args)
 
     for (const auto& result : results)
     {
-        totalBytes += result.bytes;
-        totalFiles += result.files;
-        totalDirectories += result.directories;
+        totalBytes = saturatingAdd(totalBytes, result.bytes);
+        totalFiles = saturatingAdd(totalFiles, result.files);
+        totalDirectories = saturatingAdd(totalDirectories, result.directories);
         if (result.active)
             ++activeCount;
         if (result.found)
         {
             ++foundCount;
             const std::string category = result.category.empty() ? "misc" : result.category;
-            categoryBytes[category] += result.bytes;
+            categoryBytes[category] = saturatingAdd(categoryBytes[category], result.bytes);
             ++categoryCounts[category];
             largestCaches.emplace_back(result.name, result.bytes);
         }
@@ -207,9 +215,7 @@ int StatsCommand::execute(const ParsedArgs& args)
               << Formatter::formatBytes(static_cast<uint64_t>(insights.averageGrowthBytes >= 0 ? insights.averageGrowthBytes : -insights.averageGrowthBytes))
               << " per snapshot\n";
     if (!insights.recommendations.empty())
-    {
         std::cout << "Top recommendation: " << insights.recommendations.front().name << " - " << insights.recommendations.front().action << '\n';
-    }
     std::cout << "\nLargest caches:\n";
     for (std::size_t i = 0; i < std::min<std::size_t>(largestCaches.size(), 5); ++i)
         std::cout << "  - " << largestCaches[i].first << " (" << Formatter::formatBytes(largestCaches[i].second) << ")\n";

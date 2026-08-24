@@ -53,6 +53,7 @@ add_library(devclean_core
     src/cleaner/CleanEngine.cpp
 
     src/utils/Formatter.cpp
+    src/utils/StringUtils.cpp
     src/utils/ThreadPool.cpp
     src/utils/TerminalUtils.cpp
 )

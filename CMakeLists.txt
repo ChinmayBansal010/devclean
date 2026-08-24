@@ -27,6 +27,7 @@ add_library(devclean_core
     src/core/CacheInsights.cpp
     src/core/StorageBudget.cpp
     src/core/CleanupPlanner.cpp
+    src/core/CleanupPolicy.cpp
     src/core/ArgumentParser.cpp
     src/core/CommandDispatcher.cpp
     src/core/Config.cpp

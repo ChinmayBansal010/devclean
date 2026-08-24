@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdlib>
+#include <exception>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -10,6 +11,7 @@
 #include <map>
 #include <nlohmann/json.hpp>
 #include <sstream>
+#include <utility>
 
 using json = nlohmann::json;
 
@@ -89,7 +91,6 @@ std::vector<std::string> ScanHistory::getDifferences(size_t fromIndex, size_t to
     if (fromIndex >= snapshots.size() || toIndex >= snapshots.size()) return diffs;
     const auto& fromSnapshot = snapshots[fromIndex];
     const auto& toSnapshot = snapshots[toIndex];
-
     auto fromMap = [](const std::vector<ScanResult>& results) {
         std::map<std::string, const ScanResult*> m;
         for (const auto& r : results) m[r.name] = &r;
@@ -97,7 +98,6 @@ std::vector<std::string> ScanHistory::getDifferences(size_t fromIndex, size_t to
     };
     const auto from = fromMap(fromSnapshot.results);
     const auto to = fromMap(toSnapshot.results);
-
     for (const auto& [name, toResult] : to)
     {
         if (from.find(name) == from.end()) diffs.push_back("NEW: " + name);
@@ -117,7 +117,6 @@ void ScanHistory::loadFromDisk()
     if (filePath.empty()) return;
     std::ifstream file(filePath);
     if (!file.good()) return;
-
     try
     {
         json j;
@@ -131,7 +130,6 @@ void ScanHistory::loadFromDisk()
             ss.totalFiles = snapshot.value("totalFiles", 0ULL);
             ss.totalDirectories = snapshot.value("totalDirectories", 0ULL);
             if (snapshot.contains("results") && snapshot["results"].is_array())
-            {
                 for (const auto& result : snapshot["results"])
                 {
                     ScanResult sr;
@@ -142,11 +140,9 @@ void ScanHistory::loadFromDisk()
                     sr.directories = result.value("directories", 0ULL);
                     ss.results.push_back(std::move(sr));
                 }
-            }
             snapshots.push_back(std::move(ss));
         }
-        if (snapshots.size() > MAX_SNAPSHOTS)
-            snapshots.resize(MAX_SNAPSHOTS);
+        if (snapshots.size() > MAX_SNAPSHOTS) snapshots.resize(MAX_SNAPSHOTS);
     }
     catch (const std::exception&) {}
 }
@@ -162,9 +158,7 @@ void ScanHistory::saveToDisk()
         '/'
 #endif
     );
-    if (separator != std::string::npos)
-        std::filesystem::create_directories(filePath.substr(0, separator));
-
+    if (separator != std::string::npos) std::filesystem::create_directories(filePath.substr(0, separator));
     try
     {
         json j = json::array();

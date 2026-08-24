@@ -1,0 +1,10 @@
+#pragma once
+
+#include <string>
+#include <string_view>
+
+namespace StringUtils {
+std::string lower(std::string_view value);
+bool startsWith(std::string_view value, std::string_view prefix);
+bool equalsIgnoreCase(std::string_view lhs, std::string_view rhs);
+}

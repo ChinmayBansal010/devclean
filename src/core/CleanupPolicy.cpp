@@ -6,7 +6,7 @@
 
 bool isCleanupSafe(const ScanResult& result)
 {
-    return result.found && !result.active && result.warnings.empty() &&
+    return result.isUsable() && result.isInactive() && !result.hasWarnings() &&
            !Filesystem::isProtectedPath(result.location);
 }
 
@@ -17,23 +17,21 @@ int cleanupPriority(const ScanResult& result, bool safe)
         priority += 20;
     if (result.bytes >= 1024ULL * 1024ULL * 1024ULL)
         priority += 10;
-    if (result.active)
+    if (!result.isInactive())
         priority -= 30;
-    if (!result.warnings.empty())
+    if (result.hasWarnings())
         priority -= 20;
     return std::max(0, priority);
 }
 
 bool cleanupCandidateMatches(const ScanResult& result, bool safeOnly)
 {
-    if (!result.found || result.bytes == 0)
+    if (!result.isUsable() || result.bytes == 0)
         return false;
     return !safeOnly || isCleanupSafe(result);
 }
 
 uint64_t cleanupEffectiveBytes(const ScanResult& result)
 {
-    if (!result.found)
-        return 0;
-    return result.bytes;
+    return result.isUsable() ? result.bytes : 0;
 }

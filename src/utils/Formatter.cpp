@@ -15,26 +15,38 @@ std::string formatValue(double size, const char* unit)
 std::string Formatter::formatBytes(uint64_t bytes)
 {
     static constexpr const char* units[] = {"B", "KB", "MB", "GB", "TB"};
-
     double size = static_cast<double>(bytes);
     int unit = 0;
-
     while (size >= 1024.0 && unit < 4)
     {
         size /= 1024.0;
         ++unit;
     }
-
     return formatValue(size, units[unit]);
 }
 
 std::string Formatter::formatSignedBytes(int64_t bytes)
 {
     const bool negative = bytes < 0;
-    const uint64_t magnitude = negative
-        ? static_cast<uint64_t>(-(bytes + 1)) + 1
-        : static_cast<uint64_t>(bytes);
+    const uint64_t magnitude = negative ? static_cast<uint64_t>(-(bytes + 1)) + 1 : static_cast<uint64_t>(bytes);
     return (negative ? "-" : "+") + formatBytes(magnitude);
+}
+
+std::string Formatter::formatCount(uint64_t count)
+{
+    const std::string value = std::to_string(count);
+    std::string result;
+    result.reserve(value.size() + value.size() / 3);
+    const std::size_t firstGroup = value.size() % 3;
+    if (firstGroup != 0)
+        result.append(value.substr(0, firstGroup));
+    for (std::size_t i = firstGroup; i < value.size(); i += 3)
+    {
+        if (!result.empty())
+            result.push_back(',');
+        result.append(value.substr(i, 3));
+    }
+    return result;
 }
 
 std::string Formatter::formatPath(const std::filesystem::path& path)

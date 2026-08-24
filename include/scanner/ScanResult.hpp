@@ -26,4 +26,19 @@ struct ScanResult
     std::string error;
     std::map<std::string, uint64_t> fileTypeBytes;
     std::vector<std::string> warnings;
+
+    bool isUsable() const
+    {
+        return found && enabled && !skipped;
+    }
+
+    bool hasWarnings() const
+    {
+        return !warnings.empty();
+    }
+
+    bool isInactive() const
+    {
+        return !active;
+    }
 };

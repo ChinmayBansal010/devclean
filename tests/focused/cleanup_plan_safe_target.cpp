@@ -1,3 +1,3 @@
 #include "core/CleanupPlanner.hpp"
 #include <cassert>
-int main(){ScanResult a;a.name="safe";a.found=true;a.bytes=80;ScanResult b;b.name="active";b.found=true;b.bytes=100;b.active=true;const auto p=buildCleanupPlan({a,b},80,true);assert(p.plannedBytes==80);assert(p.items.size()==1);assert(p.items.front().name=="safe");return 0;}
+int main(){ScanResult a;a.name="safe";a.location="/tmp/devclean-test";a.found=true;a.bytes=80;ScanResult b;b.name="active";b.location="/tmp/devclean-test-active";b.found=true;b.bytes=100;b.active=true;const auto p=buildCleanupPlan({a,b},80,true);assert(p.plannedBytes==80);assert(p.items.size()==1);assert(p.items.front().name=="safe");return 0;}

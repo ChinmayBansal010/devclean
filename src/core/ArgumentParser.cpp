@@ -1,24 +1,16 @@
 #include "core/ArgumentParser.hpp"
 
-#include <algorithm>
+#include "utils/StringUtils.hpp"
+
 #include <cctype>
 #include <limits>
 #include <string>
 
 namespace {
 
-std::string normalize(const std::string& value)
-{
-    std::string result = value;
-    std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c) {
-        return static_cast<char>(std::tolower(c));
-    });
-    return result;
-}
-
 bool isOption(const std::string& token)
 {
-    return token.rfind("--", 0) == 0 || token == "-h" || token == "-V";
+    return StringUtils::startsWith(token, "--") || token == "-h" || token == "-V";
 }
 
 bool hasValue(int index, int argc, char* argv[])
@@ -29,7 +21,7 @@ bool hasValue(int index, int argc, char* argv[])
 bool inlineValue(const std::string& token, const std::string& option, std::string& value)
 {
     const std::string prefix = option + "=";
-    if (token.rfind(prefix, 0) != 0)
+    if (!StringUtils::startsWith(token, prefix))
         return false;
     value = token.substr(prefix.size());
     return true;
@@ -37,11 +29,10 @@ bool inlineValue(const std::string& token, const std::string& option, std::strin
 
 uint64_t parseSize(const std::string& value)
 {
-    const std::string normalized = normalize(value);
+    const std::string normalized = StringUtils::lower(value);
     std::size_t suffixStart = 0;
     while (suffixStart < normalized.size() && std::isdigit(static_cast<unsigned char>(normalized[suffixStart]))) ++suffixStart;
     if (suffixStart == 0) return 0;
-
     uint64_t multiplier = 1;
     const std::string suffix = normalized.substr(suffixStart);
     if (suffix == "kb") multiplier = 1024ULL;
@@ -49,7 +40,6 @@ uint64_t parseSize(const std::string& value)
     else if (suffix == "gb") multiplier = 1024ULL * 1024ULL * 1024ULL;
     else if (suffix == "tb") multiplier = 1024ULL * 1024ULL * 1024ULL * 1024ULL;
     else if (!suffix.empty() && suffix != "b") return 0;
-
     try
     {
         const uint64_t base = std::stoull(normalized.substr(0, suffixStart));
@@ -61,11 +51,10 @@ uint64_t parseSize(const std::string& value)
 
 uint64_t parseDuration(const std::string& value)
 {
-    const std::string normalized = normalize(value);
+    const std::string normalized = StringUtils::lower(value);
     std::size_t suffixStart = 0;
     while (suffixStart < normalized.size() && std::isdigit(static_cast<unsigned char>(normalized[suffixStart]))) ++suffixStart;
     if (suffixStart == 0) return 0;
-
     uint64_t multiplier = 1;
     const std::string suffix = normalized.substr(suffixStart);
     if (suffix == "s") multiplier = 1;
@@ -74,7 +63,6 @@ uint64_t parseDuration(const std::string& value)
     else if (suffix == "d") multiplier = 24ULL * 60ULL * 60ULL;
     else if (suffix == "w") multiplier = 7ULL * 24ULL * 60ULL * 60ULL;
     else return 0;
-
     try
     {
         const uint64_t base = std::stoull(normalized.substr(0, suffixStart));
@@ -89,13 +77,11 @@ uint64_t parseDuration(const std::string& value)
 ParsedArgs ArgumentParser::parse(int argc, char* argv[])
 {
     ParsedArgs args;
-
     for (int i = 1; i < argc; ++i)
     {
         const std::string token = argv[i];
-        const std::string lower = normalize(token);
+        const std::string lower = StringUtils::lower(token);
         std::string value;
-
         if (token == "--json") args.json = true;
         else if (token == "--verbose") args.verbose = true;
         else if (token == "--dry-run") args.dryRun = true;
@@ -122,19 +108,19 @@ ParsedArgs ArgumentParser::parse(int argc, char* argv[])
         else if (token == "--version" || token == "-V") args.version = true;
         else if (token == "--category" || inlineValue(token, "--category", value))
         {
-            if (!value.empty() || hasValue(i, argc, argv)) args.category = normalize(value.empty() ? argv[++i] : value);
+            if (!value.empty() || hasValue(i, argc, argv)) args.category = StringUtils::lower(value.empty() ? argv[++i] : value);
         }
         else if (token == "--exclude" || inlineValue(token, "--exclude", value))
         {
-            if (!value.empty() || hasValue(i, argc, argv)) args.excludes.emplace_back(normalize(value.empty() ? argv[++i] : value));
+            if (!value.empty() || hasValue(i, argc, argv)) args.excludes.emplace_back(StringUtils::lower(value.empty() ? argv[++i] : value));
         }
         else if (token == "--sort" || inlineValue(token, "--sort", value))
         {
-            if (!value.empty() || hasValue(i, argc, argv)) args.sort = normalize(value.empty() ? argv[++i] : value);
+            if (!value.empty() || hasValue(i, argc, argv)) args.sort = StringUtils::lower(value.empty() ? argv[++i] : value);
         }
         else if (token == "--report" || inlineValue(token, "--report", value))
         {
-            if (!value.empty() || hasValue(i, argc, argv)) args.reportFormat = normalize(value.empty() ? argv[++i] : value);
+            if (!value.empty() || hasValue(i, argc, argv)) args.reportFormat = StringUtils::lower(value.empty() ? argv[++i] : value);
         }
         else if (token == "--reverse") args.reverse = true;
         else if (!isOption(token))
@@ -143,6 +129,5 @@ ParsedArgs ArgumentParser::parse(int argc, char* argv[])
             else args.targets.emplace_back(lower);
         }
     }
-
     return args;
 }

@@ -6,30 +6,24 @@
 #include "platform/ToolDetector.hpp"
 #include "scanner/CacheRegistry.hpp"
 #include "scanner/PluginLoader.hpp"
+#include "utils/StringUtils.hpp"
 
 #include <algorithm>
-#include <cctype>
 #include <cstdlib>
-#include <exception>
+#include <filesystem>
 #include <string>
 #include <utility>
 #include <vector>
 
 namespace {
-std::string normalize(const std::string& value)
-{
-    std::string result = value;
-    std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-    return result;
-}
 
 bool matchesQuery(const ScanResult& result, const std::string& query)
 {
-    const std::string normalized = normalize(query);
+    const std::string normalized = StringUtils::lower(query);
     if (normalized.empty()) return true;
-    if (normalize(result.name).find(normalized) != std::string::npos) return true;
+    if (StringUtils::lower(result.name).find(normalized) != std::string::npos) return true;
     for (const auto& alias : result.aliases)
-        if (normalize(alias).find(normalized) != std::string::npos) return true;
+        if (StringUtils::lower(alias).find(normalized) != std::string::npos) return true;
     return false;
 }
 
@@ -58,7 +52,7 @@ std::filesystem::path resolveConfiguredPath(const CacheDefinition& cache)
     {
         const char* rawValue = std::getenv(envVar.c_str());
         if (rawValue == nullptr || *rawValue == '\0') continue;
-        std::filesystem::path candidate = expandUserPath(rawValue);
+        auto candidate = expandUserPath(rawValue);
         if (!candidate.is_absolute())
         {
             std::error_code error;
@@ -83,10 +77,9 @@ std::vector<CacheDefinition> mergeCaches(const std::vector<CacheDefinition>& bas
 {
     std::vector<CacheDefinition> merged = base;
     auto alreadyPresent = [](const std::vector<CacheDefinition>& caches, const std::string& name) {
-        const std::string normalizedName = normalize(name);
         return std::any_of(caches.begin(), caches.end(), [&](const CacheDefinition& cache) {
-            if (normalize(cache.name) == normalizedName) return true;
-            return std::any_of(cache.aliases.begin(), cache.aliases.end(), [&](const std::string& alias) { return normalize(alias) == normalizedName; });
+            if (StringUtils::equalsIgnoreCase(cache.name, name)) return true;
+            return std::any_of(cache.aliases.begin(), cache.aliases.end(), [&](const std::string& alias) { return StringUtils::equalsIgnoreCase(alias, name); });
         });
     };
     for (const auto& cache : extra)
@@ -97,8 +90,7 @@ std::vector<CacheDefinition> mergeCaches(const std::vector<CacheDefinition>& bas
 std::chrono::seconds computeAge(const std::filesystem::file_time_type& modified)
 {
     if (modified == std::filesystem::file_time_type{}) return std::chrono::seconds{0};
-    const auto now = std::filesystem::file_time_type::clock::now();
-    const auto delta = now - modified;
+    const auto delta = std::filesystem::file_time_type::clock::now() - modified;
     if (delta <= std::filesystem::file_time_type::duration::zero()) return std::chrono::seconds{0};
     return std::chrono::duration_cast<std::chrono::seconds>(delta);
 }
@@ -111,8 +103,8 @@ std::vector<ScanResult> ScannerEngine::scan(const std::vector<std::string>& filt
     if (!filters.empty())
         caches.erase(std::remove_if(caches.begin(), caches.end(), [&](const CacheDefinition& cache) {
             return !std::any_of(filters.begin(), filters.end(), [&](const std::string& filter) {
-                if (normalize(cache.name) == normalize(filter)) return true;
-                return std::any_of(cache.aliases.begin(), cache.aliases.end(), [&](const std::string& alias) { return normalize(alias) == normalize(filter); });
+                if (StringUtils::equalsIgnoreCase(cache.name, filter)) return true;
+                return std::any_of(cache.aliases.begin(), cache.aliases.end(), [&](const std::string& alias) { return StringUtils::equalsIgnoreCase(alias, filter); });
             });
         }), caches.end());
 
@@ -122,7 +114,7 @@ std::vector<ScanResult> ScannerEngine::scan(const std::vector<std::string>& filt
         std::vector<CacheDefinition> filteredPlugins;
         for (const auto& plugin : plugins)
             if (std::any_of(filters.begin(), filters.end(), [&](const std::string& filter) {
-                    return normalize(plugin.name) == normalize(filter) || std::any_of(plugin.aliases.begin(), plugin.aliases.end(), [&](const std::string& alias) { return normalize(alias) == normalize(filter); });
+                    return StringUtils::equalsIgnoreCase(plugin.name, filter) || std::any_of(plugin.aliases.begin(), plugin.aliases.end(), [&](const std::string& alias) { return StringUtils::equalsIgnoreCase(alias, filter); });
                 })) filteredPlugins.push_back(plugin);
         plugins = std::move(filteredPlugins);
     }
@@ -145,9 +137,8 @@ std::vector<ScanResult> ScannerEngine::scan(const std::vector<std::string>& filt
         if (!result.active)
             result.active = std::any_of(cache.aliases.begin(), cache.aliases.end(), [](const std::string& alias) { return ToolDetector::getInstance().isInstalled(alias); });
         result.warnings = ToolDetector::getInstance().getWarningsForCache(cache.name);
-        const std::string normalizedName = normalize(result.name);
-        if (std::any_of(config.disabledCaches.begin(), config.disabledCaches.end(), [&](const std::string& disabled) { return normalize(disabled) == normalizedName; }) ||
-            std::any_of(config.ignoredCaches.begin(), config.ignoredCaches.end(), [&](const std::string& ignored) { return normalize(ignored) == normalizedName; }))
+        if (std::any_of(config.disabledCaches.begin(), config.disabledCaches.end(), [&](const std::string& disabled) { return StringUtils::equalsIgnoreCase(disabled, result.name); }) ||
+            std::any_of(config.ignoredCaches.begin(), config.ignoredCaches.end(), [&](const std::string& ignored) { return StringUtils::equalsIgnoreCase(ignored, result.name); }))
         {
             result.skipped = true;
             result.error = "ignored by configuration";
@@ -176,7 +167,7 @@ std::vector<ScanResult> ScannerEngine::scan(const std::vector<std::string>& filt
         }
         if (previousSnapshot != nullptr)
         {
-            const auto previous = std::find_if(previousSnapshot->results.begin(), previousSnapshot->results.end(), [&](const ScanResult& past) { return normalize(past.name) == normalizedName; });
+            const auto previous = std::find_if(previousSnapshot->results.begin(), previousSnapshot->results.end(), [&](const ScanResult& past) { return StringUtils::equalsIgnoreCase(past.name, result.name); });
             if (previous != previousSnapshot->results.end())
                 result.growthBytes = static_cast<int64_t>(result.bytes) - static_cast<int64_t>((*previous).bytes);
         }
@@ -185,7 +176,7 @@ std::vector<ScanResult> ScannerEngine::scan(const std::vector<std::string>& filt
 
     std::vector<ScanResult> filtered;
     filtered.reserve(results.size());
-    for (const auto& result : results)
+    for (const auto& result)
         if (result.skipped || filters.empty() || std::any_of(filters.begin(), filters.end(), [&](const std::string& filter) { return matchesQuery(result, filter); })) filtered.push_back(result);
     return filtered;
 }

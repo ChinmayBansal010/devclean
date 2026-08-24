@@ -12,6 +12,7 @@
 
 #include <iostream>
 #include <string>
+#include <unordered_map>
 
 namespace {
 
@@ -62,11 +63,28 @@ void printHelp()
     std::cout << "  devclean stats --json\n";
 }
 
+std::string canonicalCommand(const std::string& command)
+{
+    static const std::unordered_map<std::string, std::string> aliases = {
+        {"s", "scan"},
+        {"a", "analyze"},
+        {"r", "recommend"},
+        {"c", "clean"},
+        {"d", "doctor"},
+        {"st", "stats"},
+        {"v", "version"}
+    };
+
+    const auto it = aliases.find(command);
+    return it == aliases.end() ? command : it->second;
+}
+
 }
 
 int CommandDispatcher::dispatch(int argc, char* argv[])
 {
-    const ParsedArgs args = ArgumentParser::parse(argc, argv);
+    ParsedArgs args = ArgumentParser::parse(argc, argv);
+    args.command = canonicalCommand(args.command);
 
     if (args.version)
     {

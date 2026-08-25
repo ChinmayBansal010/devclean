@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cstdint>
 #include <chrono>
+#include <cstdint>
 #include <filesystem>
 #include <map>
 #include <string>
@@ -40,5 +40,15 @@ struct ScanResult
     bool isInactive() const
     {
         return !active;
+    }
+
+    bool hasGrowth() const
+    {
+        return growthBytes != 0;
+    }
+
+    bool isStale(std::chrono::seconds threshold) const
+    {
+        return threshold.count() > 0 && age >= threshold;
     }
 };

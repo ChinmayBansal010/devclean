@@ -19,6 +19,9 @@ struct CleanupPlan
 {
     uint64_t requestedBytes = 0;
     uint64_t plannedBytes = 0;
+    uint64_t safeBytes = 0;
+    uint64_t unsafeBytes = 0;
+    std::size_t candidateCount = 0;
     bool targetReached = false;
     std::vector<CleanupPlanItem> items;
 };

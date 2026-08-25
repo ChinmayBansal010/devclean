@@ -18,6 +18,7 @@ StorageBudget calculateStorageBudget(uint64_t limitBytes,
         budget.projectedBytes = currentBytes;
         budget.headroomBytes = 0;
         budget.requiredReclaimBytes = 0;
+        budget.canMeetLimit = true;
         budget.exceeded = false;
         budget.utilization = 0.0;
         budget.projectedUtilization = 0.0;
@@ -28,6 +29,7 @@ StorageBudget calculateStorageBudget(uint64_t limitBytes,
     budget.exceeded = currentBytes > limitBytes;
     budget.headroomBytes = budget.projectedBytes < limitBytes ? limitBytes - budget.projectedBytes : 0;
     budget.requiredReclaimBytes = currentBytes > limitBytes ? currentBytes - limitBytes : 0;
+    budget.canMeetLimit = budget.reclaimableBytes >= budget.requiredReclaimBytes;
     budget.utilization = static_cast<double>(currentBytes) / static_cast<double>(limitBytes);
     budget.projectedUtilization = static_cast<double>(budget.projectedBytes) / static_cast<double>(limitBytes);
     return budget;

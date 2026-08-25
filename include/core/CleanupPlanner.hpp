@@ -24,6 +24,16 @@ struct CleanupPlan
     std::size_t candidateCount = 0;
     bool targetReached = false;
     std::vector<CleanupPlanItem> items;
+
+    uint64_t shortfallBytes() const
+    {
+        return plannedBytes < requestedBytes ? requestedBytes - plannedBytes : 0;
+    }
+
+    bool hasShortfall() const
+    {
+        return shortfallBytes() != 0;
+    }
 };
 
 CleanupPlan buildCleanupPlan(const std::vector<ScanResult>& results,

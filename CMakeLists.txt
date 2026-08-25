@@ -59,6 +59,9 @@ add_library(devclean_core
 )
 
 target_compile_definitions(devclean_core PRIVATE DEVCLEAN_VERSION="${PROJECT_VERSION}")
+if(WIN32)
+    target_compile_definitions(devclean_core PRIVATE NOMINMAX)
+endif()
 target_link_libraries(devclean_core PRIVATE nlohmann_json::nlohmann_json)
 
 add_executable(devclean src/main.cpp)
@@ -71,6 +74,7 @@ add_executable(devclean_scan_result_tests tests/unit/scan_result_tests.cpp)
 add_executable(devclean_cache_insights_tests tests/unit/cache_insights_tests.cpp)
 add_executable(devclean_doctor_tests tests/unit/doctor_tests.cpp)
 
+set(DEVCLEAN_FOCUSED_TEST_TARGETS)
 file(GLOB DEVCLEAN_FOCUSED_TEST_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/focused/*.cpp")
 foreach(test_source ${DEVCLEAN_FOCUSED_TEST_SOURCES})
@@ -80,6 +84,7 @@ foreach(test_source ${DEVCLEAN_FOCUSED_TEST_SOURCES})
     target_link_libraries(${test_target} PRIVATE devclean_core)
     devclean_enable_warnings(${test_target})
     add_test(NAME "devclean.focused.${test_name}" COMMAND ${test_target})
+    list(APPEND DEVCLEAN_FOCUSED_TEST_TARGETS ${test_target})
 endforeach()
 
 add_executable(devclean_benchmark src/benchmark.cpp)
@@ -146,7 +151,8 @@ if(DEVCLEAN_ENABLE_SANITIZERS OR ENABLE_SANITIZERS)
         devclean_scan_result_tests
         devclean_cache_insights_tests
         devclean_doctor_tests
-        devclean_benchmark)
+        devclean_benchmark
+        ${DEVCLEAN_FOCUSED_TEST_TARGETS})
         devclean_enable_sanitizers(${target})
     endforeach()
 endif()

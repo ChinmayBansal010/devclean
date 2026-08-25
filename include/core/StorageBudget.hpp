@@ -11,6 +11,7 @@ struct StorageBudget
     uint64_t reclaimableBytes = 0;
     uint64_t projectedBytes = 0;
     uint64_t headroomBytes = 0;
+    uint64_t requiredReclaimBytes = 0;
     bool exceeded = false;
     double utilization = 0.0;
     double projectedUtilization = 0.0;

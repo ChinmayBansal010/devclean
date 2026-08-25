@@ -24,6 +24,12 @@ bool endsWith(std::string_view value, std::string_view suffix)
     return value.size() >= suffix.size() && value.substr(value.size() - suffix.size()) == suffix;
 }
 
+bool endsWithIgnoreCase(std::string_view value, std::string_view suffix)
+{
+    return value.size() >= suffix.size() &&
+        equalsIgnoreCase(value.substr(value.size() - suffix.size()), suffix);
+}
+
 bool equalsIgnoreCase(std::string_view lhs, std::string_view rhs)
 {
     return lhs.size() == rhs.size() && lower(lhs) == lower(rhs);

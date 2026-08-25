@@ -44,6 +44,15 @@ std::size_t bestCandidate(const std::vector<CleanupPlanItem>& candidates,
     return best;
 }
 
+void accountPlanItem(CleanupPlan& plan, const CleanupPlanItem& item)
+{
+    plan.plannedBytes += item.bytes;
+    if (item.safe)
+        plan.safeBytes += item.bytes;
+    else
+        plan.unsafeBytes += item.bytes;
+}
+
 }
 
 CleanupPlan buildCleanupPlan(const std::vector<ScanResult>& results,
@@ -69,6 +78,8 @@ CleanupPlan buildCleanupPlan(const std::vector<ScanResult>& results,
         candidates.push_back(std::move(item));
     }
 
+    plan.candidateCount = candidates.size();
+
     std::stable_sort(candidates.begin(), candidates.end(), [](const auto& lhs, const auto& rhs) {
         if (lhs.priority != rhs.priority)
             return lhs.priority > rhs.priority;
@@ -81,7 +92,7 @@ CleanupPlan buildCleanupPlan(const std::vector<ScanResult>& results,
     {
         plan.items = std::move(candidates);
         for (const auto& item : plan.items)
-            plan.plannedBytes += item.bytes;
+            accountPlanItem(plan, item);
         plan.targetReached = true;
         return plan;
     }
@@ -96,7 +107,7 @@ CleanupPlan buildCleanupPlan(const std::vector<ScanResult>& results,
 
         selected[index] = true;
         plan.items.push_back(candidates[index]);
-        plan.plannedBytes += candidates[index].bytes;
+        accountPlanItem(plan, candidates[index]);
     }
 
     plan.targetReached = plan.plannedBytes >= targetBytes;

@@ -24,15 +24,25 @@ bool endsWith(std::string_view value, std::string_view suffix)
     return value.size() >= suffix.size() && value.substr(value.size() - suffix.size()) == suffix;
 }
 
+bool equalsIgnoreCase(std::string_view lhs, std::string_view rhs)
+{
+    if (lhs.size() != rhs.size())
+        return false;
+
+    for (std::size_t i = 0; i < lhs.size(); ++i)
+    {
+        const auto left = static_cast<unsigned char>(lhs[i]);
+        const auto right = static_cast<unsigned char>(rhs[i]);
+        if (std::tolower(left) != std::tolower(right))
+            return false;
+    }
+    return true;
+}
+
 bool endsWithIgnoreCase(std::string_view value, std::string_view suffix)
 {
     return value.size() >= suffix.size() &&
         equalsIgnoreCase(value.substr(value.size() - suffix.size()), suffix);
-}
-
-bool equalsIgnoreCase(std::string_view lhs, std::string_view rhs)
-{
-    return lhs.size() == rhs.size() && lower(lhs) == lower(rhs);
 }
 
 std::string trim(std::string_view value)

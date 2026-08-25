@@ -19,6 +19,11 @@ bool startsWith(std::string_view value, std::string_view prefix)
     return value.size() >= prefix.size() && value.substr(0, prefix.size()) == prefix;
 }
 
+bool endsWith(std::string_view value, std::string_view suffix)
+{
+    return value.size() >= suffix.size() && value.substr(value.size() - suffix.size()) == suffix;
+}
+
 bool equalsIgnoreCase(std::string_view lhs, std::string_view rhs)
 {
     return lhs.size() == rhs.size() && lower(lhs) == lower(rhs);

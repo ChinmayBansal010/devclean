@@ -29,7 +29,7 @@ bool inlineValue(const std::string& token, const std::string& option, std::strin
 
 uint64_t parseSize(const std::string& value)
 {
-    const std::string normalized = StringUtils::lower(value);
+    const std::string normalized = StringUtils::lower(StringUtils::trim(value));
     std::size_t suffixStart = 0;
     while (suffixStart < normalized.size() && std::isdigit(static_cast<unsigned char>(normalized[suffixStart]))) ++suffixStart;
     if (suffixStart == 0) return 0;
@@ -51,7 +51,7 @@ uint64_t parseSize(const std::string& value)
 
 uint64_t parseDuration(const std::string& value)
 {
-    const std::string normalized = StringUtils::lower(value);
+    const std::string normalized = StringUtils::lower(StringUtils::trim(value));
     std::size_t suffixStart = 0;
     while (suffixStart < normalized.size() && std::isdigit(static_cast<unsigned char>(normalized[suffixStart]))) ++suffixStart;
     if (suffixStart == 0) return 0;
@@ -108,25 +108,25 @@ ParsedArgs ArgumentParser::parse(int argc, char* argv[])
         else if (token == "--version" || token == "-V") args.version = true;
         else if (token == "--category" || inlineValue(token, "--category", value))
         {
-            if (!value.empty() || hasValue(i, argc, argv)) args.category = StringUtils::lower(value.empty() ? argv[++i] : value);
+            if (!value.empty() || hasValue(i, argc, argv)) args.category = StringUtils::lower(StringUtils::trim(value.empty() ? argv[++i] : value));
         }
         else if (token == "--exclude" || inlineValue(token, "--exclude", value))
         {
-            if (!value.empty() || hasValue(i, argc, argv)) args.excludes.emplace_back(StringUtils::lower(value.empty() ? argv[++i] : value));
+            if (!value.empty() || hasValue(i, argc, argv)) args.excludes.emplace_back(StringUtils::lower(StringUtils::trim(value.empty() ? argv[++i] : value)));
         }
         else if (token == "--sort" || inlineValue(token, "--sort", value))
         {
-            if (!value.empty() || hasValue(i, argc, argv)) args.sort = StringUtils::lower(value.empty() ? argv[++i] : value);
+            if (!value.empty() || hasValue(i, argc, argv)) args.sort = StringUtils::lower(StringUtils::trim(value.empty() ? argv[++i] : value));
         }
         else if (token == "--report" || inlineValue(token, "--report", value))
         {
-            if (!value.empty() || hasValue(i, argc, argv)) args.reportFormat = StringUtils::lower(value.empty() ? argv[++i] : value);
+            if (!value.empty() || hasValue(i, argc, argv)) args.reportFormat = StringUtils::lower(StringUtils::trim(value.empty() ? argv[++i] : value));
         }
         else if (token == "--reverse") args.reverse = true;
         else if (!isOption(token))
         {
             if (args.command.empty()) args.command = lower;
-            else args.targets.emplace_back(lower);
+            else args.targets.emplace_back(StringUtils::lower(StringUtils::trim(token)));
         }
     }
     return args;

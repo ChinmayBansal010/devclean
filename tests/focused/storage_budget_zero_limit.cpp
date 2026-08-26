@@ -1,3 +1,13 @@
 #include "core/StorageBudget.hpp"
 #include <cassert>
-int main(){const auto b=calculateStorageBudget(0,4096,2048);assert(b.limitBytes==0);assert(b.currentBytes==4096);assert(b.projectedBytes==4096);assert(!b.exceeded);assert(b.utilization==0.0);return 0;}
+
+int main()
+{
+    const StorageBudget budget = calculateStorageBudget(0, 4096, 2048);
+    assert(budget.limitBytes == 0);
+    assert(budget.currentBytes == 4096);
+    assert(budget.projectedBytes == 4096);
+    assert(budget.headroomBytes == 0);
+    assert(!budget.exceeded);
+    return 0;
+}

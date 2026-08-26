@@ -4,8 +4,6 @@
 
 **A cross-platform developer cache analyzer and cleanup CLI built with C++23.**
 
-Scan what is consuming your disk, understand cache growth, diagnose your development environment, and clean safely without relying on a pile of unrelated shell commands.
-
 [![C++23](https://img.shields.io/badge/C%2B%2B-23-00599C?style=flat-square&logo=cplusplus&logoColor=white)](https://en.cppreference.com/w/cpp/23)
 [![CMake](https://img.shields.io/badge/CMake-3.20%2B-064F8C?style=flat-square&logo=cmake&logoColor=white)](https://cmake.org/)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-555555?style=flat-square)](#platform-support)
@@ -15,38 +13,30 @@ Scan what is consuming your disk, understand cache growth, diagnose your develop
 
 ---
 
-## Why devclean?
+## What it does
 
-Developer machines accumulate caches quietly. Package managers, compilers, build systems, containers, IDEs, and language tooling can leave behind tens of gigabytes that are difficult to inspect manually.
+`devclean` scans developer caches, measures storage usage, analyzes growth and health, diagnoses common development tooling, and plans cleanup with explicit safety constraints.
 
-`devclean` provides one consistent interface for **discovering, analyzing, and safely cleaning developer caches** across operating systems.
-
-It is designed around a few principles:
-
-- **Visibility first:** scan and understand before deleting anything.
-- **Safety by default:** protected locations and risky cache states are handled explicitly.
-- **Automation friendly:** JSON output and deterministic command behavior make scripting practical.
-- **Extensible:** cache definitions are registry-driven and can be extended through configuration and plugins.
-- **Cross-platform:** platform-specific cache resolution is kept behind the application architecture.
+It supports registry-driven cache discovery, plugin/config extensions, scan history, target-based cleanup, stale-file cleanup, safe cleanup mode, structured reports, JSON output, and a terminal dashboard.
 
 ## Highlights
 
 | Capability | What it provides |
 |---|---|
-| Cache scanning | Discover cache locations, sizes, file counts, warnings, and paths |
-| Analysis | Inspect cache composition and produce structured reports |
-| Health insights | Growth trends, health scoring, and cleanup recommendations |
-| Target cleanup | Clean toward a requested storage budget such as `10GB` |
-| Stale cleanup | Remove files older than a requested age such as `30d` |
-| Safe mode | Exclude active, warned, and protected locations from cleanup |
-| Diagnostics | `devclean doctor` checks common developer tools and their activity |
-| Interactive dashboard | Inspect cache state through a terminal dashboard |
-| JSON output | Integrate scans, diagnostics, statistics, and reports into scripts |
-| Plugin support | Extend the cache catalog without hard-coding every tool into commands |
-| History | Persist scan information for trend-oriented analysis |
-| Packaging | Build/package workflows for Linux, Windows, and macOS |
+| Cache scanning | Discover cache paths, sizes, files, directories, warnings, and categories |
+| Analysis | Analyze storage usage and export structured reports |
+| Health insights | Growth trends, health scoring, and ranked recommendations |
+| Target cleanup | Clean toward a requested amount such as `10GB` |
+| Stale cleanup | Remove files older than a duration such as `30d` |
+| Safe mode | Exclude active, warned, and protected locations |
+| Diagnostics | `devclean doctor` checks common developer tools |
+| Dashboard | Interactive terminal view of cache health and recommendations |
+| JSON output | Integrate commands into scripts and automation |
+| Plugins | Extend the cache catalog without hard-coding every tool |
+| History | Persist scan information for trend analysis |
+| Cross-platform | Linux, macOS, and Windows path handling and packaging |
 
-## Supported commands
+## Commands
 
 ```text
 devclean scan       Discover developer caches
@@ -72,37 +62,22 @@ Requirements:
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j2
-```
-
-Run a first scan:
-
-```bash
 ./build/devclean scan
 ```
 
-Then inspect the environment:
+Inspect recommendations before cleaning:
 
 ```bash
 ./build/devclean doctor
 ./build/devclean recommend
-```
-
-For a destructive operation, start with a dry run:
-
-```bash
 ./build/devclean clean --dry-run
 ```
 
-When the proposed cleanup is understood, safety constraints can be applied explicitly:
+Then apply safety constraints explicitly:
 
 ```bash
-./build/devclean clean --safe --target 10GB
-```
-
-Or clean only files older than a chosen age:
-
-```bash
-./build/devclean clean --safe --stale 30d
+devclean clean --safe --target 10GB
+devclean clean --safe --stale 30d
 ```
 
 ## Usage
@@ -116,17 +91,13 @@ devclean scan --json
 devclean scan --active-only
 ```
 
-A scan reports cache identity, size, file count, directory count, category, warnings, and the resolved filesystem path.
-
-### Analyze
+### Analyze and report
 
 ```bash
 devclean analyze
 devclean analyze --report json
 devclean analyze --report html
 ```
-
-Analysis can be used to understand which caches have the greatest storage impact before cleanup.
 
 ### Recommendations and dashboard
 
@@ -135,9 +106,7 @@ devclean recommend
 devclean dashboard
 ```
 
-Recommendations combine cache health information, growth trends, cleanup impact, and safety considerations. The dashboard provides an interactive terminal view and can refresh its scan state.
-
-### Clean safely
+### Cleanup
 
 ```bash
 devclean clean --dry-run
@@ -146,42 +115,21 @@ devclean clean --safe --target 10GB
 devclean clean --safe --stale 30d
 ```
 
-`--target` limits the cleanup budget. `--stale` performs file-level cleanup based on age. `--safe` adds restrictions around active caches, warnings, and protected paths.
+`--target` limits the cleanup budget. `--stale` applies file-age based cleanup. `--safe` excludes active, warned, and protected locations.
 
-Supported duration units:
+Supported duration units are `s`, `m`, `h`, `d`, and `w`.
 
-```text
-s   seconds
-m   minutes
-h   hours
-d   days
-w   weeks
-```
-
-### Diagnose
+### Diagnostics
 
 ```bash
 devclean doctor
 devclean doctor --json
-```
-
-The doctor command checks common developer tools and reports installation/activity information in a format suitable for both humans and automation.
-
-### Automation
-
-Most information-oriented commands support JSON output where applicable:
-
-```bash
-devclean scan --json
-devclean doctor --json
 devclean stats --json
 ```
 
-This makes `devclean` suitable for shell scripts, CI diagnostics, local maintenance tooling, and other developer automation.
+JSON output is intended for automation, scripting, CI diagnostics, and other tooling.
 
 ## Supported caches
-
-The cache catalog currently covers common ecosystems and development tooling:
 
 | Category | Examples |
 |---|---|
@@ -193,61 +141,51 @@ The cache catalog currently covers common ecosystems and development tooling:
 | Containers | Docker builder/volumes, `podman` |
 | Editors / IDEs | VS Code, JetBrains tooling |
 
-The registry-based design allows the catalog to grow without coupling every cache implementation to the command layer.
-
-## Platform support
-
-`devclean` contains platform-specific path resolution for:
-
-- **Linux:** cache roots under `~/.cache` and relevant environment-defined locations.
-- **macOS:** common application/tool caches under `~/Library/Caches`.
-- **Windows:** `%USERPROFILE%`, `%LOCALAPPDATA%`, and `%APPDATA%` where applicable.
-
-Packaging is configured for platform-appropriate archive/package formats.
-
 ## Safety model
 
-Cleanup is deliberately more constrained than scanning. `devclean` protects critical filesystem locations and can identify cache locations associated with active development tools.
+Cleanup is more restrictive than scanning. Protected filesystem locations are rejected, and safe mode adds checks for active tools, warnings, and protected paths.
 
-Protected examples include:
+Examples of protected locations include:
 
 - `/`
 - home directories
 - Windows system roots
 - `Program Files`
 
-Additional safety behavior can exclude caches that are active, warned, or otherwise protected.
-
-Custom cache paths supplied through configuration or plugins must be absolute and are checked against protected locations.
-
-**Recommended workflow:**
+A recommended workflow is:
 
 ```text
 SCAN → ANALYZE → REVIEW → DRY RUN → SAFE CLEANUP
 ```
 
-Do not skip directly to deletion because apparently that is how computers acquire both bugs and angry users.
+## Platform support
+
+- **Linux:** common cache roots under `~/.cache` and environment-defined locations.
+- **macOS:** common tool/application caches under `~/Library/Caches`.
+- **Windows:** `%USERPROFILE%`, `%LOCALAPPDATA%`, and `%APPDATA%` where applicable.
+
+The project also contains cross-platform build and packaging workflows.
 
 ## Configuration
 
-Configuration is loaded automatically from:
+Configuration is loaded from:
 
 - Linux/macOS: `~/.config/devclean/config.json`
 - Windows: `%APPDATA%/devclean/config.json`
 
-See [`docs/config.example.json`](docs/config.example.json) for the complete example.
+See [`docs/config.example.json`](docs/config.example.json) for an example configuration.
 
-Supported configuration areas include:
+Useful fields include:
 
-- `disabledCaches` - disable selected cache definitions.
-- `ignoredCaches` - hide selected caches from normal listings and cleanup.
-- `defaultSort` - configure the default scan sort order.
-- `defaultCategory` - configure a default scan category.
-- `customCaches` - register custom cache definitions with absolute paths.
+- `disabledCaches`
+- `ignoredCaches`
+- `defaultSort`
+- `defaultCategory`
+- `customCaches`
 
 ## Build with vcpkg
 
-The repository includes a local vcpkg checkout and a root `vcpkg.json` manifest.
+The repository includes a vcpkg checkout and root manifest.
 
 ```bash
 cd vcpkg
@@ -259,24 +197,15 @@ cmake -S . -B build \
 cmake --build build
 ```
 
-The manifest provides `nlohmann-json` through the vcpkg toolchain.
-
 ## Development
-
-Configure a debug build:
 
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build -j2
-```
-
-Run the complete test suite:
-
-```bash
 ctest --test-dir build --output-on-failure
 ```
 
-Optional static-quality targets are available when the corresponding tools are installed:
+Optional tooling:
 
 ```bash
 cmake --build build --target tidy
@@ -284,7 +213,7 @@ cmake --build build --target cppcheck
 cmake --build build --target format
 ```
 
-Sanitizer builds can be enabled with the project's sanitizer option:
+Sanitizers:
 
 ```bash
 cmake -S . -B build-sanitize \
@@ -299,14 +228,14 @@ ctest --test-dir build-sanitize --output-on-failure
 ```text
 include/       Public C++ interfaces
 src/core/      Application, configuration, planning, and command infrastructure
-src/commands/  CLI command implementations
-src/engine/    Cache analysis and supporting engines
-src/scanner/   Cache discovery and registry/plugin handling
+src/commands/  CLI commands
+src/engine/    Cache analysis engines
+src/scanner/   Discovery, registry, and plugins
 src/cleaner/   Cleanup execution
-src/platform/  Operating-system-specific filesystem/tool behavior
+src/platform/  Operating-system-specific behavior
 src/utils/     Formatting, strings, terminal, and concurrency utilities
 tests/         CLI, unit, and focused tests
-cmake/         Compiler warning and sanitizer configuration
+cmake/         Warning and sanitizer configuration
 docs/          Detailed project documentation
 ```
 
@@ -326,19 +255,13 @@ docs/          Detailed project documentation
 
 ## Contributing
 
-Contributions are welcome. Before submitting changes:
+Before submitting changes, build the project and run the relevant tests. Platform-specific changes should remain isolated where practical, and behavioral changes should include focused coverage.
 
-1. Build the project.
-2. Run the test suite.
-3. Run relevant quality checks when available.
-4. Keep platform-specific behavior isolated where practical.
-5. Include focused tests for behavior changes.
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for repository-specific contribution guidance.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for repository contribution guidance.
 
 ## License
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).
 
 ---
 

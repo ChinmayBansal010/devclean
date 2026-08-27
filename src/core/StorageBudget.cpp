@@ -77,3 +77,8 @@ double budgetHeadroomRatio(const StorageBudget& budget)
         return 0.0;
     return static_cast<double>(budget.headroomBytes) / static_cast<double>(budget.limitBytes);
 }
+
+uint64_t budgetSavingsBytes(const StorageBudget& budget)
+{
+    return budget.currentBytes > budget.projectedBytes ? budget.currentBytes - budget.projectedBytes : 0;
+}

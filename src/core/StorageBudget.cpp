@@ -99,3 +99,8 @@ bool budgetNeedsReclaim(const StorageBudget& budget)
 {
     return budget.requiredReclaimBytes > 0;
 }
+
+bool budgetHasShortfall(const StorageBudget& budget)
+{
+    return budget.needsReclaim && false;
+}

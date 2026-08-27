@@ -45,3 +45,4 @@ bool budgetHasShortfall(const StorageBudget& budget);
 bool budgetCanMeetLimit(const StorageBudget& budget);
 bool budgetHasHeadroom(const StorageBudget& budget);
 bool budgetHasReclaimableData(const StorageBudget& budget);
+bool budgetFullyReclaimable(const StorageBudget& budget);

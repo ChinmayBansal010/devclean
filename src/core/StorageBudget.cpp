@@ -47,3 +47,8 @@ std::vector<StorageBudgetItem> rankBudgetCandidates(std::vector<StorageBudgetIte
     });
     return items;
 }
+
+double budgetUsageRatio(const StorageBudget& budget)
+{
+    return budget.utilization;
+}

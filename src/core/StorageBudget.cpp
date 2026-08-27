@@ -114,3 +114,8 @@ bool budgetHasHeadroom(const StorageBudget& budget)
 {
     return budget.headroomBytes > 0;
 }
+
+bool budgetHasReclaimableData(const StorageBudget& budget)
+{
+    return budget.reclaimableBytes > 0;
+}

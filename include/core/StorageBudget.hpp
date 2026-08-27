@@ -46,3 +46,8 @@ bool budgetCanMeetLimit(const StorageBudget& budget);
 bool budgetHasHeadroom(const StorageBudget& budget);
 bool budgetHasReclaimableData(const StorageBudget& budget);
 bool budgetFullyReclaimable(const StorageBudget& budget);
+
+inline bool budgetIsUnlimited(const StorageBudget& budget)
+{
+    return budget.limitBytes == 0;
+}

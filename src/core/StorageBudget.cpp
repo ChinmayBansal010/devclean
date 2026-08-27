@@ -52,3 +52,8 @@ double budgetUsageRatio(const StorageBudget& budget)
 {
     return budget.utilization;
 }
+
+double budgetProjectedUsageRatio(const StorageBudget& budget)
+{
+    return budget.projectedUtilization;
+}

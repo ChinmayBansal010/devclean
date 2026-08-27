@@ -89,3 +89,8 @@ double budgetSavingsRatio(const StorageBudget& budget)
         return 0.0;
     return static_cast<double>(budgetSavingsBytes(budget)) / static_cast<double>(budget.currentBytes);
 }
+
+bool budgetWithinLimit(const StorageBudget& budget)
+{
+    return budget.limitBytes == 0 || budget.currentBytes <= budget.limitBytes;
+}

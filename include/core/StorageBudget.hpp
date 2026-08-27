@@ -31,3 +31,5 @@ StorageBudget calculateStorageBudget(uint64_t limitBytes,
                                      uint64_t reclaimableBytes);
 
 std::vector<StorageBudgetItem> rankBudgetCandidates(std::vector<StorageBudgetItem> items);
+
+double budgetUsageRatio(const StorageBudget& budget);

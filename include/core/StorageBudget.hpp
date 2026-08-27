@@ -43,3 +43,4 @@ bool budgetWithinLimit(const StorageBudget& budget);
 bool budgetNeedsReclaim(const StorageBudget& budget);
 bool budgetHasShortfall(const StorageBudget& budget);
 bool budgetCanMeetLimit(const StorageBudget& budget);
+bool budgetHasHeadroom(const StorageBudget& budget);

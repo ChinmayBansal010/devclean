@@ -109,3 +109,8 @@ bool budgetCanMeetLimit(const StorageBudget& budget)
 {
     return budget.canMeetLimit;
 }
+
+bool budgetHasHeadroom(const StorageBudget& budget)
+{
+    return budget.headroomBytes > 0;
+}

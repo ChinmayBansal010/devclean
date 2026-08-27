@@ -57,3 +57,8 @@ double budgetProjectedUsageRatio(const StorageBudget& budget)
 {
     return budget.projectedUtilization;
 }
+
+uint64_t budgetRequiredReclaim(const StorageBudget& budget)
+{
+    return budget.requiredReclaimBytes;
+}

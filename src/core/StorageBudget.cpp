@@ -104,3 +104,8 @@ bool budgetHasShortfall(const StorageBudget& budget)
 {
     return budget.requiredReclaimBytes > budget.reclaimableBytes;
 }
+
+bool budgetCanMeetLimit(const StorageBudget& budget)
+{
+    return budget.canMeetLimit;
+}

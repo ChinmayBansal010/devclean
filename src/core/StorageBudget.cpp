@@ -82,3 +82,10 @@ uint64_t budgetSavingsBytes(const StorageBudget& budget)
 {
     return budget.currentBytes > budget.projectedBytes ? budget.currentBytes - budget.projectedBytes : 0;
 }
+
+double budgetSavingsRatio(const StorageBudget& budget)
+{
+    if (budget.currentBytes == 0)
+        return 0.0;
+    return static_cast<double>(budgetSavingsBytes(budget)) / static_cast<double>(budget.currentBytes);
+}

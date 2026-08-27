@@ -40,3 +40,4 @@ double budgetHeadroomRatio(const StorageBudget& budget);
 uint64_t budgetSavingsBytes(const StorageBudget& budget);
 double budgetSavingsRatio(const StorageBudget& budget);
 bool budgetWithinLimit(const StorageBudget& budget);
+bool budgetNeedsReclaim(const StorageBudget& budget);

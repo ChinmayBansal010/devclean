@@ -1,6 +1,6 @@
 <div align="center">
 
-# devclean
+# DevClean
 
 **A cross-platform developer cache analyzer and cleanup CLI built with C++23.**
 

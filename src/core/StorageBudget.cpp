@@ -119,3 +119,8 @@ bool budgetHasReclaimableData(const StorageBudget& budget)
 {
     return budget.reclaimableBytes > 0;
 }
+
+bool budgetFullyReclaimable(const StorageBudget& budget)
+{
+    return budget.currentBytes > 0 && budget.reclaimableBytes == budget.currentBytes;
+}

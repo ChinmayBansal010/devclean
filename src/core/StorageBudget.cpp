@@ -94,3 +94,8 @@ bool budgetWithinLimit(const StorageBudget& budget)
 {
     return budget.limitBytes == 0 || budget.currentBytes <= budget.limitBytes;
 }
+
+bool budgetNeedsReclaim(const StorageBudget& budget)
+{
+    return budget.requiredReclaimBytes > 0;
+}

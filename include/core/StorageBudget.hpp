@@ -38,3 +38,4 @@ uint64_t budgetRequiredReclaim(const StorageBudget& budget);
 double budgetReclaimCoverage(const StorageBudget& budget);
 double budgetHeadroomRatio(const StorageBudget& budget);
 uint64_t budgetSavingsBytes(const StorageBudget& budget);
+double budgetSavingsRatio(const StorageBudget& budget);

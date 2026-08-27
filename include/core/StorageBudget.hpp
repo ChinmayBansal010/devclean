@@ -36,3 +36,4 @@ double budgetUsageRatio(const StorageBudget& budget);
 double budgetProjectedUsageRatio(const StorageBudget& budget);
 uint64_t budgetRequiredReclaim(const StorageBudget& budget);
 double budgetReclaimCoverage(const StorageBudget& budget);
+double budgetHeadroomRatio(const StorageBudget& budget);

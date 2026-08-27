@@ -34,3 +34,4 @@ std::vector<StorageBudgetItem> rankBudgetCandidates(std::vector<StorageBudgetIte
 
 double budgetUsageRatio(const StorageBudget& budget);
 double budgetProjectedUsageRatio(const StorageBudget& budget);
+uint64_t budgetRequiredReclaim(const StorageBudget& budget);

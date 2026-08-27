@@ -62,3 +62,11 @@ uint64_t budgetRequiredReclaim(const StorageBudget& budget)
 {
     return budget.requiredReclaimBytes;
 }
+
+double budgetReclaimCoverage(const StorageBudget& budget)
+{
+    if (budget.requiredReclaimBytes == 0)
+        return 1.0;
+    return std::min(1.0, static_cast<double>(budget.reclaimableBytes) /
+                           static_cast<double>(budget.requiredReclaimBytes));
+}

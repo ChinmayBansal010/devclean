@@ -70,3 +70,10 @@ double budgetReclaimCoverage(const StorageBudget& budget)
     return std::min(1.0, static_cast<double>(budget.reclaimableBytes) /
                            static_cast<double>(budget.requiredReclaimBytes));
 }
+
+double budgetHeadroomRatio(const StorageBudget& budget)
+{
+    if (budget.limitBytes == 0)
+        return 0.0;
+    return static_cast<double>(budget.headroomBytes) / static_cast<double>(budget.limitBytes);
+}

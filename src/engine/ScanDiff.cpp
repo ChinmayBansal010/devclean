@@ -1,7 +1,18 @@
 #include "engine/ScanDiff.hpp"
 
 #include <algorithm>
+#include <limits>
 #include <map>
+
+namespace {
+
+int64_t toSignedBytes(uint64_t bytes)
+{
+    constexpr uint64_t maxSigned = static_cast<uint64_t>(std::numeric_limits<int64_t>::max());
+    return bytes > maxSigned ? std::numeric_limits<int64_t>::max() : static_cast<int64_t>(bytes);
+}
+
+} // namespace
 
 ScanDiff compareScans(const std::vector<ScanResult>& before,
                       const std::vector<ScanResult>& after)
@@ -22,7 +33,7 @@ ScanDiff compareScans(const std::vector<ScanResult>& before,
     for (const auto& [name, result] : newValues)
         diff.afterBytes += result.bytes;
 
-    diff.byteDelta = static_cast<int64_t>(diff.afterBytes) - static_cast<int64_t>(diff.beforeBytes);
+    diff.byteDelta = toSignedBytes(diff.afterBytes) - toSignedBytes(diff.beforeBytes);
 
     auto oldIt = oldValues.begin();
     auto newIt = newValues.begin();
@@ -32,7 +43,7 @@ ScanDiff compareScans(const std::vector<ScanResult>& before,
         {
             ScanChange change;
             change.name = oldIt->first;
-            change.byteDelta = -static_cast<int64_t>(oldIt->second.bytes);
+            change.byteDelta = -toSignedBytes(oldIt->second.bytes);
             change.fileDelta = -static_cast<int64_t>(oldIt->second.files);
             change.disappeared = true;
             diff.changes.push_back(std::move(change));
@@ -44,7 +55,7 @@ ScanDiff compareScans(const std::vector<ScanResult>& before,
         {
             ScanChange change;
             change.name = newIt->first;
-            change.byteDelta = static_cast<int64_t>(newIt->second.bytes);
+            change.byteDelta = toSignedBytes(newIt->second.bytes);
             change.fileDelta = static_cast<int64_t>(newIt->second.files);
             change.appeared = true;
             diff.changes.push_back(std::move(change));
@@ -54,7 +65,7 @@ ScanDiff compareScans(const std::vector<ScanResult>& before,
 
         ScanChange change;
         change.name = newIt->first;
-        change.byteDelta = static_cast<int64_t>(newIt->second.bytes) - static_cast<int64_t>(oldIt->second.bytes);
+        change.byteDelta = toSignedBytes(newIt->second.bytes) - toSignedBytes(oldIt->second.bytes);
         change.fileDelta = static_cast<int64_t>(newIt->second.files) - static_cast<int64_t>(oldIt->second.files);
         if (change.byteDelta != 0 || change.fileDelta != 0)
             diff.changes.push_back(std::move(change));

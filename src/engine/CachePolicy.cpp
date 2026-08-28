@@ -2,6 +2,15 @@
 
 #include <algorithm>
 
+namespace {
+
+constexpr uint64_t GiB = 1024ULL * 1024ULL * 1024ULL;
+constexpr uint64_t LargeCacheThreshold = GiB;
+constexpr uint64_t MediumCacheThreshold = 256ULL * 1024ULL * 1024ULL;
+constexpr uint64_t StaleThresholdSeconds = 90ULL * 24ULL * 60ULL * 60ULL;
+
+} // namespace
+
 CachePolicyDecision evaluateCachePolicy(const CachePolicyInput& input)
 {
     CachePolicyDecision decision;
@@ -25,15 +34,15 @@ CachePolicyDecision evaluateCachePolicy(const CachePolicyInput& input)
         return decision;
     }
 
-    if (input.bytes >= 1024ULL * 1024ULL * 1024ULL)
+    if (input.bytes >= LargeCacheThreshold)
         decision.priority += 30;
-    else if (input.bytes >= 256ULL * 1024ULL * 1024ULL)
+    else if (input.bytes >= MediumCacheThreshold)
         decision.priority += 15;
 
     if (input.growthBytes > 0)
-        decision.priority += input.growthBytes >= static_cast<int64_t>(1024ULL * 1024ULL * 1024ULL) ? 20 : 10;
+        decision.priority += input.growthBytes >= static_cast<int64_t>(GiB) ? 20 : 10;
 
-    if (input.ageSeconds >= 90ULL * 24ULL * 60ULL * 60ULL)
+    if (input.ageSeconds >= StaleThresholdSeconds)
         decision.priority += 15;
 
     decision.priority = std::clamp(decision.priority, 0, 100);

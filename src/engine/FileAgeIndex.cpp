@@ -16,7 +16,7 @@ std::chrono::seconds fileAge(const std::filesystem::file_time_type& modified)
 } // namespace
 
 std::vector<FileAgeEntry> indexFileAges(const std::filesystem::path& root,
-                                        std::chrono::seconds staleAfter)
+                                        std::chrono::seconds)
 {
     std::vector<FileAgeEntry> entries;
     std::error_code ec;

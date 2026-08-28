@@ -1,5 +1,6 @@
 #include "engine/SizeEstimator.hpp"
 
+#include <limits>
 #include <system_error>
 
 SizeEstimate estimateDirectorySize(const std::filesystem::path& root)
@@ -36,7 +37,16 @@ SizeEstimate estimateDirectorySize(const std::filesystem::path& root)
             }
             else
             {
-                estimate.bytes += static_cast<uint64_t>(size);
+                const uint64_t bytes = static_cast<uint64_t>(size);
+                if (estimate.bytes > std::numeric_limits<uint64_t>::max() - bytes)
+                {
+                    estimate.bytes = std::numeric_limits<uint64_t>::max();
+                    estimate.complete = false;
+                }
+                else
+                {
+                    estimate.bytes += bytes;
+                }
                 ++estimate.files;
             }
         }

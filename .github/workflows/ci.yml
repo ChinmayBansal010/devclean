@@ -92,7 +92,13 @@ jobs:
         fi
 
     - name: Build
-      run: cmake --build build --config ${{ matrix.build_type }} --parallel 2
+      shell: bash
+      run: |
+        if [ "${{ runner.os }}" = "Windows" ]; then
+          cmake --build build --config ${{ matrix.build_type }} --parallel 1
+        else
+          cmake --build build --config ${{ matrix.build_type }} --parallel 2
+        fi
 
     - name: Test
       working-directory: build

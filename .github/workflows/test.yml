@@ -61,7 +61,13 @@ jobs:
           fi
 
       - name: Build
-        run: cmake --build build --config Debug --parallel 2
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            cmake --build build --config Debug --parallel 1
+          else
+            cmake --build build --config Debug --parallel 2
+          fi
 
       - name: Test
         run: ctest --test-dir build --build-config Debug --output-on-failure

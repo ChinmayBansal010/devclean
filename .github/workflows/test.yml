@@ -61,7 +61,7 @@ jobs:
           fi
 
       - name: Build
-        run: cmake --build build --config Debug --parallel
+        run: cmake --build build --config Debug --parallel 2
 
       - name: Test
         run: ctest --test-dir build --build-config Debug --output-on-failure

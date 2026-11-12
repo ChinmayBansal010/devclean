@@ -92,7 +92,7 @@ jobs:
         fi
 
     - name: Build
-      run: cmake --build build --config ${{ matrix.build_type }} --parallel
+      run: cmake --build build --config ${{ matrix.build_type }} --parallel 2
 
     - name: Test
       working-directory: build
@@ -128,7 +128,7 @@ jobs:
         -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
 
     - name: Build
-      run: cmake --build build --parallel
+      run: cmake --build build --parallel 2
 
     - name: Test with sanitizers
       working-directory: build
@@ -161,7 +161,7 @@ jobs:
         -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
 
     - name: Build (for compile_commands.json)
-      run: cmake --build build --parallel
+      run: cmake --build build --parallel 2
 
     - name: Run clang-tidy
       run: |
@@ -254,7 +254,7 @@ jobs:
         fi
 
     - name: Build
-      run: cmake --build build --parallel
+      run: cmake --build build --parallel 2
 
     - name: Package
       working-directory: build
